@@ -1,0 +1,233 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input cclk,             // configuration clock, AVR ready when high
+    output spi_miso,        // AVR SPI MISO
+    input spi_ss,           // AVR SPI Slave Select
+    input spi_mosi,         // AVR SPI MOSI
+    input spi_sck,          // AVR SPI Clock
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    input avr_tx,           // AVR TX (FPGA RX)
+    output avr_rx,          // AVR RX (FPGA TX)
+    input avr_rx_busy,      // AVR RX buffer full
+    output io_led [3][8],   // LEDs on IO Shield
+    output io_seg [8],      // 7-segment LEDs on IO Shield
+    output io_sel [4],      // Digit select on IO Shield
+    input io_button [5],    // 5 buttons on IO Shield
+    input io_dip [3][8],     // DIP switches on IO Shield
+    
+    input sum, 
+    input carry,
+    output a, // FPGA outputs to adder
+    output b,
+    output c
+    
+
+
+  ) {
+  
+  sig rst;                  // reset signal
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+    
+    .rst(rst) {
+      dff counter[20]; //counter to cycle through the states
+      fsm state = {A,B,C,D,E,F,G,H,I,J,K}; // each state for a different combination of A, B & Cin, with additional error & success state
+    }
+   
+  }
+  
+  const X = 19;
+  
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    
+    led = 8h00;             // turn LEDs off
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+    
+    io_led = 3x{{8h00}};    // turn LEDs off
+    io_seg = 8hff;          // turn segments off
+    io_sel = 4hf;           // select no digits
+    
+    a = 0;
+    b = 0;
+    c = 0;
+    
+    io_led[0] = 8x{sum}; // first 8 io_leds to indicate sum 
+    io_led[2] = 8x{carry}; // last 8 io_leds to indicate carry
+    
+    
+    case (state.q){
+    
+      state.I: // initial state
+        counter.d = 0;
+        led = 8h00;
+        if ( io_dip[0][0] == 1) { // switch on first switch on IO shield to start test
+          state.d = state.A;
+        }
+          
+        
+      state.A: 
+        a = 0; 
+        b = 0; 
+        c = 0;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 0 & sum == 0 ) { // if adder outputs to FPGA correctly, proceed to next state 
+          counter.d = 0;
+          state.d = state.B;
+         }
+         
+        else if ( counter.q[X] == 1 & !(carry == 0 & sum == 0)) { // if adder does not output as expected, proceed to error state
+          counter.d = 0;
+          state.d = state.K;
+        }
+      
+        
+        
+       state.B: 
+        a = 0; 
+        b = 0; 
+        c = 1;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 0 & sum == 1 ) {
+          counter.d = 0;
+          state.d = state.C;
+        }
+        
+        else if ( counter.q[X] == 1 & !(carry == 0 & sum == 1)) {
+          counter.d = 0;
+          state.d = state.K;
+        }
+        
+        
+          
+      state.C: 
+        a = 0; 
+        b = 1; 
+        c = 0;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 0 & sum == 1 ) {
+          counter.d = 0;
+          state.d = state.D;
+        }
+        else if ( counter.q[X] == 1 & !(carry == 0 & sum == 1)) {
+          counter.d = 0;
+          state.d = state.K;
+        }
+          
+        
+        
+      state.D: 
+        a = 0; 
+        b = 1; 
+        c = 1;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 1 & sum == 0){
+          counter.d = 0;
+          state.d = state.E;
+        }
+        else if ( counter.q[X] == 1 & !(carry == 1 & sum == 0)) {
+          counter.d = 0;
+          state.d = state.K;
+        }        
+          
+        
+        
+      state.E: 
+        a = 1; 
+        b = 0; 
+        c = 0;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 0 & sum == 1 ) {
+          counter.d = 0;
+          state.d = state.F; 
+        }
+        else if ( counter.q[X] == 1 & !(carry == 0 & sum == 1)) {
+          counter.d = 0;
+          state.d = state.K;
+        }
+             
+        
+        
+      state.F: 
+        a = 1; 
+        b = 0; 
+        c = 1;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 1 & sum == 0 ) {
+          counter.d = 0;
+          state.d = state.G;  
+        }
+        else if ( counter.q[X] == 1 & !(carry == 1 & sum == 0)) {
+          counter.d = 0;
+          state.d = state.K;
+        }
+          
+        
+        
+      state.G: 
+        a = 1; 
+        b = 1; 
+        c = 0;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 1 & sum == 0 ) {
+          counter.d = 0;
+          state.d = state.H; 
+        }
+        else if ( counter.q[X] == 1 & !(carry == 1 & sum == 0)) {
+          counter.d = 0;
+          state.d = state.K;
+        }
+         
+        
+        
+      state.H: 
+        a = 1; 
+        b = 1; 
+        c = 1;
+        counter.d = counter.q+1;
+        if ( counter.q[X] == 1 & carry == 1 & sum == 1 ) {
+          counter.d = 0;
+          state.d = state.J; // when all tests are passed, proceed to success state
+        }
+        else if ( counter.q[X] == 1 & !(carry == 1 & sum == 1)) {
+          counter.d = 0;
+          state.d = state.K;
+        }
+          
+        
+        
+      state.J: // success state
+        counter.d = 0;
+        io_led = 3x{{8hFF}}; // all io_leds light up to indicate success
+        a = 0;
+        b = 0;
+        c = 0;
+        if ( io_dip[0][0] == 0) { // switch off first switch to return to initial state
+          state.d = state.I;
+        }
+        
+      state.K: // error state
+        counter.d = 0;
+        led = 8hFF; // all leds light up to indicate failure
+        a = 0;
+        b = 0;
+        c = 0;        
+        if ( io_dip[0][0] == 0) { // switch off to return to initial state
+          state.d = state.I;
+        }
+        
+                
+      default: a = 0; b = 0; c = 0;      
+    }
+    
+
+  }
+}

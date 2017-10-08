@@ -1,0 +1,13 @@
+NET "a" LOC = P51;
+NET "a" IOSTANDARD = LVTTL;
+NET "b" LOC = P41;
+NET "b" IOSTANDARD = LVTTL;
+NET "c" LOC = P35;
+NET "c" IOSTANDARD = LVTTL;
+
+NET "sum" LOC = P6;
+NET "sum" IOSTANDARD = LVTTL;
+NET "sum" PULLUP;
+NET "carry" LOC = P2;
+NET "carry" IOSTANDARD = LVTTL;
+NET "carry" PULLUP;
