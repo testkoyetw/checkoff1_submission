@@ -35,13 +35,13 @@ module mojo_top (
     reset_conditioner reset_cond;
     
     .rst(rst) {
-      dff counter[20]; //counter to cycle through the states
+      dff counter[30]; //counter to cycle through the states
       fsm state = {A,B,C,D,E,F,G,H,I,J,K}; // each state for a different combination of A, B & Cin, with additional error & success state
     }
    
   }
   
-  const X = 19;
+  const X = 29;
   
   always {
     reset_cond.in = ~rst_n; // input raw inverted reset signal
@@ -78,6 +78,7 @@ module mojo_top (
         a = 0; 
         b = 0; 
         c = 0;
+        led[0] = 0; led[1] = 0; led[2] = 0; // leds light up according to a, b, cin outputs
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 0 & sum == 0 ) { // if adder outputs to FPGA correctly, proceed to next state 
           counter.d = 0;
@@ -95,6 +96,7 @@ module mojo_top (
         a = 0; 
         b = 0; 
         c = 1;
+        led[0] = 0; led[1] = 0; led[2] = 1;
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 0 & sum == 1 ) {
           counter.d = 0;
@@ -112,6 +114,7 @@ module mojo_top (
         a = 0; 
         b = 1; 
         c = 0;
+        led[0] = 0; led[1] = 1; led[2] = 0;
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 0 & sum == 1 ) {
           counter.d = 0;
@@ -128,6 +131,7 @@ module mojo_top (
         a = 0; 
         b = 1; 
         c = 1;
+        led[0] = 0; led[1] = 1; led[2] = 1;
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 1 & sum == 0){
           counter.d = 0;
@@ -144,6 +148,7 @@ module mojo_top (
         a = 1; 
         b = 0; 
         c = 0;
+        led[0] = 1; led[1] = 0; led[2] = 0;
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 0 & sum == 1 ) {
           counter.d = 0;
@@ -160,6 +165,7 @@ module mojo_top (
         a = 1; 
         b = 0; 
         c = 1;
+        led[0] = 1; led[1] = 0; led[2] = 1;
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 1 & sum == 0 ) {
           counter.d = 0;
@@ -176,6 +182,7 @@ module mojo_top (
         a = 1; 
         b = 1; 
         c = 0;
+        led[0] = 1; led[1] = 1; led[2] = 0;
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 1 & sum == 0 ) {
           counter.d = 0;
@@ -192,6 +199,7 @@ module mojo_top (
         a = 1; 
         b = 1; 
         c = 1;
+        led[1] = 0; led[1] = 0; led[1] = 0;
         counter.d = counter.q+1;
         if ( counter.q[X] == 1 & carry == 1 & sum == 1 ) {
           counter.d = 0;
@@ -206,6 +214,7 @@ module mojo_top (
         
       state.J: // success state
         counter.d = 0;
+        led = 8h00; // all leds are off
         io_led = 3x{{8hFF}}; // all io_leds light up to indicate success
         a = 0;
         b = 0;
