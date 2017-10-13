@@ -50,7 +50,7 @@ WARNING:Xst:647 - Input <avr_rx_busy> is never used. This port will be preserved
     | Encoding           | auto                                           |
     | Implementation     | LUT                                            |
     -----------------------------------------------------------------------
-    Found 30-bit adder for signal <M_counter_q[29]_GND_1_o_add_79_OUT> created at line 196.
+    Found 30-bit adder for signal <M_counter_q[29]_GND_1_o_add_79_OUT> created at line 220.
     Found 1-bit tristate buffer for signal <spi_miso> created at line 60
     Found 1-bit tristate buffer for signal <spi_channel<3>> created at line 60
     Found 1-bit tristate buffer for signal <spi_channel<2>> created at line 60
@@ -184,9 +184,9 @@ Timing Summary:
 ---------------
 Speed Grade: -2
 
-   Minimum period: 3.784ns (Maximum Frequency: 264.299MHz)
+   Minimum period: 3.845ns (Maximum Frequency: 260.105MHz)
    Minimum input arrival time before clock: 4.002ns
-   Maximum output required time after clock: 6.597ns
+   Maximum output required time after clock: 6.631ns
    Maximum combinational path delay: 6.743ns
 
 =========================================================================

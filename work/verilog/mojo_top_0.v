@@ -88,6 +88,9 @@ module mojo_top_0 (
         a = 1'h0;
         b = 1'h0;
         c = 1'h0;
+        led[0+0-:1] = 1'h0;
+        led[1+0-:1] = 1'h0;
+        led[2+0-:1] = 1'h0;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h0 & sum == 1'h0) begin
           M_counter_d = 1'h0;
@@ -103,6 +106,9 @@ module mojo_top_0 (
         a = 1'h0;
         b = 1'h0;
         c = 1'h1;
+        led[0+0-:1] = 1'h0;
+        led[1+0-:1] = 1'h0;
+        led[2+0-:1] = 1'h1;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h0 & sum == 1'h1) begin
           M_counter_d = 1'h0;
@@ -118,6 +124,9 @@ module mojo_top_0 (
         a = 1'h0;
         b = 1'h1;
         c = 1'h0;
+        led[0+0-:1] = 1'h0;
+        led[1+0-:1] = 1'h1;
+        led[2+0-:1] = 1'h0;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h0 & sum == 1'h1) begin
           M_counter_d = 1'h0;
@@ -133,6 +142,9 @@ module mojo_top_0 (
         a = 1'h0;
         b = 1'h1;
         c = 1'h1;
+        led[0+0-:1] = 1'h0;
+        led[1+0-:1] = 1'h1;
+        led[2+0-:1] = 1'h1;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h1 & sum == 1'h0) begin
           M_counter_d = 1'h0;
@@ -148,6 +160,9 @@ module mojo_top_0 (
         a = 1'h1;
         b = 1'h0;
         c = 1'h0;
+        led[0+0-:1] = 1'h1;
+        led[1+0-:1] = 1'h0;
+        led[2+0-:1] = 1'h0;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h0 & sum == 1'h1) begin
           M_counter_d = 1'h0;
@@ -163,6 +178,9 @@ module mojo_top_0 (
         a = 1'h1;
         b = 1'h0;
         c = 1'h1;
+        led[0+0-:1] = 1'h1;
+        led[1+0-:1] = 1'h0;
+        led[2+0-:1] = 1'h1;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h1 & sum == 1'h0) begin
           M_counter_d = 1'h0;
@@ -178,6 +196,9 @@ module mojo_top_0 (
         a = 1'h1;
         b = 1'h1;
         c = 1'h0;
+        led[0+0-:1] = 1'h1;
+        led[1+0-:1] = 1'h1;
+        led[2+0-:1] = 1'h0;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h1 & sum == 1'h0) begin
           M_counter_d = 1'h0;
@@ -193,6 +214,9 @@ module mojo_top_0 (
         a = 1'h1;
         b = 1'h1;
         c = 1'h1;
+        led[0+0-:1] = 1'h1;
+        led[1+0-:1] = 1'h1;
+        led[2+0-:1] = 1'h1;
         M_counter_d = M_counter_q + 1'h1;
         if (M_counter_q[29+0-:1] == 1'h1 & carry == 1'h1 & sum == 1'h1) begin
           M_counter_d = 1'h0;
@@ -206,6 +230,7 @@ module mojo_top_0 (
       end
       J_state: begin
         M_counter_d = 1'h0;
+        led = 8'h00;
         io_led = 24'hffffff;
         a = 1'h0;
         b = 1'h0;
