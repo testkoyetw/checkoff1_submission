@@ -1,0 +1,55 @@
+module alu (
+    input alufn[6],
+    input a[8],  
+    input b[8],  
+    output out[8]
+      
+  ) {
+  
+  adder add;
+  comparer compare;
+  boolean boole;
+  shifter shift;
+
+  always {
+ 
+    
+    add.alufn_add = alufn[1:0];
+    add.a = a;
+    add.b = b;
+    
+    compare.alufn_cmp = alufn[2:1];
+    compare.v = add.v;
+    compare.n = add.n;
+    compare.z = add.z;
+    
+    boole.alufn_boole = alufn[3:0];
+    boole.a = a;
+    boole.b = b;
+    
+    shift.alufn_shift = alufn[1:0];
+    shift.a = a;
+    shift.b = b;
+    
+    
+    case(alufn[5:4]){
+    
+      2b00:
+        out = add.s;
+      
+      2b01:
+        out = boole.boole;
+        
+      2b10:
+        out = shift.shift;
+        
+      2b11:
+        out = compare.cmp;
+        
+      default:
+        out = 8b0;
+    }
+    
+    
+  }
+}
