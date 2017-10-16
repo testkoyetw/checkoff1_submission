@@ -1,8 +1,8 @@
 module alu (
-    input alufn[6],
-    input a[8],  
-    input b[8],  
-    output out[8]
+    input alufn[6], // ALUFN[5:0]
+    input a[8], // 8 bits input a  
+    input b[8],  // 8 bits input b 
+    output out[8] // 8 bits output 
       
   ) {
   
@@ -14,16 +14,18 @@ module alu (
   always {
  
     
-    add.alufn_add = alufn[1:0];
-    add.a = a;
+    add.alufn_add = alufn[1:0]; 
+    add.a = a; 
     add.b = b;
     
     compare.alufn_cmp = alufn[2:1];
-    compare.v = add.v;
+    
+    // assign v n z outputs from adder as v n z input to comparer
+    compare.v = add.v; 
     compare.n = add.n;
     compare.z = add.z;
     
-    boole.alufn_boole = alufn[3:0];
+    boole.alufn_boole = alufn[3:0]; 
     boole.a = a;
     boole.b = b;
     
@@ -32,10 +34,12 @@ module alu (
     shift.b = b;
     
     
-    case(alufn[5:4]){
+    
+    // control signals ALUFN[5:4] to select which unit will supply the value for the ALU output   
+    case(alufn[5:4]){ 
     
       2b00:
-        out = add.s;
+        out = add.s; 
       
       2b01:
         out = boole.boole;

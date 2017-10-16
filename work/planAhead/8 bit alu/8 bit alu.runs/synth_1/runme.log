@@ -88,7 +88,7 @@ WARNING:Xst:647 - Input <avr_rx_busy> is never used. This port will be preserved
     | Encoding           | auto                                           |
     | Implementation     | LUT                                            |
     -----------------------------------------------------------------------
-    Found 30-bit adder for signal <M_counter_q[29]_GND_1_o_add_105_OUT> created at line 314.
+    Found 30-bit adder for signal <M_counter_q[29]_GND_1_o_add_106_OUT> created at line 314.
     Found 1-bit tristate buffer for signal <spi_miso> created at line 84
     Found 1-bit tristate buffer for signal <spi_channel<3>> created at line 84
     Found 1-bit tristate buffer for signal <spi_channel<2>> created at line 84

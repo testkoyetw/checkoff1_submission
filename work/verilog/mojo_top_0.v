@@ -120,7 +120,7 @@ module mojo_top_0 (
           M_counter_d = 1'h0;
           M_state_d = SUB_state;
         end else begin
-          if (M_counter_q[29+0-:1] & (M_alu_out != 8'h80)) begin
+          if (M_counter_q[29+0-:1] == 1'h1 & (M_alu_out != 8'h80)) begin
             M_state_d = ADDERR_state;
           end
         end

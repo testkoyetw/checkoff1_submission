@@ -74,26 +74,38 @@ module mojo_top (
           
           }
         
-      state.ADD:
-        alu.alufn = 6b0; 
+      // one set of 8 bit inputs is used for each category of operation (arithmetic, boolean, compare, shift)
+      // each set is choosen to produce an unique result for each operation under that category
+      
+      // arithmetic: a = 01111111 b = 00000001
+      // boolean:    a = 01010101 b = 11111111
+      // shift:      a = 11000011 b = 00000100
+      // compare:    a = 00001111 b = 01111111
+        
+      //////////////////////////////////arithmetic operations//////////////////////////////////
+      // a = 01111111
+      // b = 00000001
+        
+      state.ADD: // addition 
+        alu.alufn = 6b0; // ALUFN encodings 
         alu.a = 8b01111111; 
         alu.b = 8b1;
         counter.d = counter.q+1;
-        seg.values = {4h0,4h0,4h0,4h1};
-        if (counter.q[X] == 1 & alu.out == 8b10000000){
+        seg.values = {4h0,4h0,4h0,4h1}; // seven segment displays a number (1 ~ 13) to identify each state
+        if (counter.q[X] == 1 & alu.out == 8b10000000){ // 01111111 + 00000001 = 10000000 
           counter.d = 0;
-          state.d = state.SUB;
+          state.d = state.SUB; // proceed to next state if test result is correct  
         }
-        else if (counter.q[X] & (alu.out != 8b10000000)) 
-        { state.d = state.ADDERR; }
+        else if (counter.q[X] == 1 & (alu.out != 8b10000000)) 
+        { state.d = state.ADDERR; } // proceed to arithmetic error state if result does not match expected
         
-      state.SUB:
-        alu.alufn = 6b1;
-        alu.a = 8b01111111;
+      state.SUB: // subtraction
+        alu.alufn = 6b1; 
+        alu.a = 8b01111111; 
         alu.b = 8b1;
         seg.values = {4h0,4h0,4h0,4h2};
         counter.d = counter.q+1;
-        if (counter.q[X] == 1 & alu.out == 8b01111110) {
+        if (counter.q[X] == 1 & alu.out == 8b01111110) { // 01111111 - 00000001 = 01111110
           counter.d = 0;
           state.d = state.MULT;
       
@@ -101,13 +113,13 @@ module mojo_top (
         else if (counter.q[X] == 1 & alu.out != 8b01111110) 
         { state.d = state.ADDERR; }
         
-      state.MULT:
-        alu.alufn = 6b000010;
+      state.MULT: //multiplication
+        alu.alufn = 6b000010; 
         alu.a = 8b01111111;
         alu.b = 8b1;
         counter.d = counter.q+1; 
         seg.values = {4h0,4h0,4h0,4h3};     
-        if (counter.q[X] == 1 & alu.out == 8b01111111) {
+        if (counter.q[X] == 1 & alu.out == 8b01111111) { // 01111111 * 00000001 = 01111111
           counter.d = 0;
           state.d = state.AND;
         }
@@ -115,20 +127,25 @@ module mojo_top (
         else if (counter.q[X] == 1 & alu.out != 8b01111111)
         { state.d = state.ADDERR; }
         
-      state.ADDERR:
-        led = 8b11;
-        if (io_dip[1][0] == 0){
+      state.ADDERR: // arithmetic error state
+        led = 8b11; // first 2 led lights up to indicate error type
+        if (io_dip[1][0] == 0){ // switch off io_dip[1][0] on IO shield to return to initial state
           state.d = state.INIT;      
         }
         
         
-      state.AND:
+        
+      //////////////////////////////////boolean operations//////////////////////////////////
+      // a = 01010101
+      // b = 11111111
+        
+      state.AND: // boolean AND
         alu.alufn = 6b011000; 
-        alu.a = 8b01010101;
+        alu.a = 8b01010101; 
         alu.b = 8b11111111;
         counter.d = counter.q+1;
         seg.values = {4h0,4h0,4h0,4h4};
-        if (counter.q[X] == 1 & alu.out == 8b01010101) {
+        if (counter.q[X] == 1 & alu.out == 8b01010101) { // 01010101 & 11111111 = 01010101
           counter.d = 0;
           state.d = state.OR;
           
@@ -136,13 +153,13 @@ module mojo_top (
         else if (counter.q[X] == 1 & alu.out != 8b01010101)
         { state.d = state.BOOLERR; }
         
-      state.OR:
+      state.OR: // boolean OR
         alu.alufn = 6b011110;
         alu.a = 8b01010101;
         alu.b = 8b11111111;
         counter.d = counter.q+1;
         seg.values = {4h0,4h0,4h0,4h5};
-        if (counter.q[X] == 1 & alu.out == 8b11111111) {
+        if (counter.q[X] == 1 & alu.out == 8b11111111) { // 01010101 | 11111111 = 11111111
           counter.d = 0;
           state.d = state.XOR;
           
@@ -150,13 +167,13 @@ module mojo_top (
         else if (counter.q[X] == 1 & alu.out != 8b11111111)
         { state.d = state.BOOLERR; }
       
-      state.XOR:
+      state.XOR: // boolean XOR 
         alu.alufn = 6b010110;
         alu.a = 8b01010101;
         alu.b = 8b11111111;
         counter.d = counter.q+1;
         seg.values = {4h0,4h0,4h0,4h6};
-        if (counter.q[X] == 1 & alu.out == 8b10101010) {
+        if (counter.q[X] == 1 & alu.out == 8b10101010) { // 01010101 ^ 11111111 = 10101010
           counter.d = 0;
           state.d = state.A;
           
@@ -164,33 +181,38 @@ module mojo_top (
         else if (counter.q[X] == 1 & alu.out != 8b10101010)
         { state.d = state.BOOLERR; }
                   
-      state.A:
+      state.A: // boolean 'A'
         alu.alufn = 6b011010;
         alu.a = 8b01010101;
         alu.b = 8b11111111;
         counter.d = counter.q+1;
         seg.values = {4h0,4h0,4h0,4h7};
-        if (counter.q[X] == 1 & alu.out == 8b01010101) {
+        if (counter.q[X] == 1 & alu.out == 8b01010101) { // a = 01010101
           counter.d = 0;
           state.d = state.SHL;
           
         }
-        else if (counter.q[X] == 1 & alu.out != 8b01010101)
-        { state.d = state.BOOLERR; }
+        else if (counter.q[X] == 1 & alu.out != 8b01010101) 
+        { state.d = state.BOOLERR; } 
         
-      state.BOOLERR:
-        led = 8b1100;
-        if (io_dip[1][0] == 0){
+      state.BOOLERR: // boolean error state
+        led = 8b1100; // led[3:2] lights up to indicate error type
+        if (io_dip[1][0] == 0){ 
           state.d = state.INIT;      
         }
+        
+        
+      //////////////////////////////////shift operations//////////////////////////////////
+      // a = 11000011
+      // b = 00000100
                
-      state.SHL:
+      state.SHL: // shift left
         alu.a = 8b11000011;
         alu.b = 8b00000100;
         counter.d = counter.q+1;
         alu.alufn = 6b100000;
         seg.values = {4h0,4h0,4h0,4h8};
-        if (counter.q[X] == 1 & alu.out == 8b00110000) {
+        if (counter.q[X] == 1 & alu.out == 8b00110000) { // 11000011 << 4 (00000100) = 00110000
           counter.d = 0;
           state.d = state.SHR;
           
@@ -198,58 +220,64 @@ module mojo_top (
         else if (counter.q[X] == 1 & alu.out != 8b00110000)
         { state.d = state.SHIFTERR; }
      
-      state.SHR:
+      state.SHR: // shift right
         alu.a = 8b11000011;
         alu.b = 8b00000100;
         counter.d = counter.q+1;
         alu.alufn = 6b100001;
         seg.values = {4h0,4h0,4h0,9};
-        if (counter.q[X] == 1 & alu.out == 8b1100) {
+        if (counter.q[X] == 1 & alu.out == 8b1100) { // 11000011 >> 4 (00000100) = 00001100
           counter.d = 0;
           state.d = state.SRA;
         }
         else if (counter.q[X] == 1 & alu.out != 8b1100)
         { state.d = state.SHIFTERR; }
       
-      state.SRA:
+      state.SRA: // shift right arithmetic
         alu.a = 8b11000011;
         alu.b = 8b00000100;
         counter.d = counter.q+1;
         alu.alufn = 6b100011;
         seg.values = {4h0,4h0,4h1,4h0};
-        if (counter.q[X] == 1 & alu.out == 8b11111100) {
+        if (counter.q[X] == 1 & alu.out == 8b11111100) { // $signed(11000011) >>> 4 (00000100) = 11111100
           counter.d = 0;
           state.d = state.CMPEQ;
          }
         else if (counter.q[X] == 1 & alu.out != 8b11111100)
         { state.d = state.SHIFTERR; }
         
-      state.SHIFTERR:
-        led = 8b110000;
+      state.SHIFTERR: // shift error state
+        led = 8b110000; // led[5:4] lights up to indicate error type
         if (io_dip[1][0] == 0){
           state.d = state.INIT;      
         }
+        
+        
+        
+      //////////////////////////////////compare operations//////////////////////////////////
+      // a = 00001111
+      // b = 01111111
       
-      state.CMPEQ:
+      state.CMPEQ: 
         alu.alufn = 6b110011;
         alu.a = 8b00001111;
         alu.b = 8b01111111;
         counter.d = counter.q+1; 
         seg.values = {4h0,4h0,4h1,4h1};
-        if (counter.q[X] == 1 & alu.out == 8b0) {
+        if (counter.q[X] == 1 & alu.out == 8b0) { // 00001111 != 01111111
           counter.d = 0;
           state.d = state.CMPLT;
         }
-        else if (counter.q[X] == 1 & alu.out != 8b0)
+        else if (counter.q[X] == 1 & alu.out != 8b0) 
          { state.d = state.CMPERR; }
          
-      state.CMPLT:
+      state.CMPLT:  
         alu.a = 8b00001111;
         alu.b = 8b01111111;
         counter.d = counter.q+1;
         alu.alufn = 6b110101;
         seg.values = {4h0,4h0,4h1,4h2};
-        if (counter.q[X] == 1 & alu.out == 8b1) {
+        if (counter.q[X] == 1 & alu.out == 8b1) { // 00001111 < 01111111
           counter.d = 0;
           state.d = state.CMPLE;
         }
@@ -262,22 +290,22 @@ module mojo_top (
         counter.d = counter.q+1;
         alu.alufn = 6b110111;
         seg.values = {4h0,4h0,4h1,4h3};
-        if (counter.q[X] == 1 & alu.out == 8b1) {
+        if (counter.q[X] == 1 & alu.out == 8b1) { // 00001111 <= 01111111
           counter.d = 0;
           state.d = state.SS;
         }
         else if (counter.q[X] == 1 & alu.out != 8b1)
         { state.d = state.CMPERR; }
         
-      state.CMPERR:
-        led = 8b11000000;
+      state.CMPERR: // compare error state
+        led = 8b11000000; // led[7:6] lights up to indicate error type
         if (io_dip[1][0] == 0){
           state.d = state.INIT;      
         }
     
-      state.SS:
-        io_led = 3x{{8hFF}};
-        if (io_dip[1][0] == 0){
+      state.SS: // success state
+        io_led = 3x{{8hFF}}; // all io_leds light up to indicate success
+        if (io_dip[1][0] == 0){ // switch off io_dip[1][0] to return to initial state
           state.d = state.INIT;      
         }
       

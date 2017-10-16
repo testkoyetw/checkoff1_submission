@@ -3,7 +3,7 @@ Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
 --> 
 
 Total REAL time to Xst completion: 0.00 secs
-Total CPU time to Xst completion: 0.06 secs
+Total CPU time to Xst completion: 0.12 secs
  
 --> Reading design: mojo_top_0.prj
 
@@ -134,7 +134,7 @@ WARNING:Xst:647 - Input <avr_rx_busy> is never used. This port will be preserved
     | Encoding           | auto                                           |
     | Implementation     | LUT                                            |
     -----------------------------------------------------------------------
-    Found 30-bit adder for signal <M_counter_q[29]_GND_1_o_add_105_OUT> created at line 314.
+    Found 30-bit adder for signal <M_counter_q[29]_GND_1_o_add_106_OUT> created at line 314.
     Found 1-bit tristate buffer for signal <spi_miso> created at line 84
     Found 1-bit tristate buffer for signal <spi_channel<3>> created at line 84
     Found 1-bit tristate buffer for signal <spi_channel<2>> created at line 84
@@ -525,7 +525,7 @@ Delay:               16.203ns (Levels of Logic = 12)
      LUT6:I5->O            4   0.254   0.804  z (z)
      end scope: 'alu/add:z'
      end scope: 'alu:M_add_z'
-     LUT6:I5->O            2   0.254   0.726  M_state_q_M_alu_out[7]_GND_1_o_equal_108_o11 (M_state_q_M_alu_out[7]_GND_1_o_equal_108_o1)
+     LUT6:I5->O            2   0.254   0.726  M_state_q_M_alu_out[7]_GND_1_o_equal_109_o11 (M_state_q_M_alu_out[7]_GND_1_o_equal_109_o1)
      LUT6:I5->O            2   0.254   0.726  M_state_q_M_counter_d<0>41 (M_state_q_M_counter_d<0>41)
      LUT6:I5->O           16   0.254   1.182  M_state_q_M_counter_d<0>49 (M_state_q_M_counter_d<0>4)
      LUT2:I1->O            1   0.254   0.000  M_state_q_M_counter_d<0>1 (M_counter_d<0>)
@@ -579,7 +579,7 @@ Offset:              17.410ns (Levels of Logic = 11)
      LUT6:I5->O            4   0.254   0.804  z (z)
      end scope: 'alu/add:z'
      end scope: 'alu:M_add_z'
-     LUT6:I5->O            2   0.254   0.834  M_state_q_M_alu_out[7]_GND_1_o_equal_108_o11 (M_state_q_M_alu_out[7]_GND_1_o_equal_108_o1)
+     LUT6:I5->O            2   0.254   0.834  M_state_q_M_alu_out[7]_GND_1_o_equal_109_o11 (M_state_q_M_alu_out[7]_GND_1_o_equal_109_o1)
      LUT6:I4->O            1   0.250   0.681  M_state_q_io_led<16> (io_led_16_OBUF)
      OBUF:I->O                 2.912          io_led_16_OBUF (io_led<16>)
     ----------------------------------------
@@ -602,12 +602,12 @@ clk            |   16.203|         |         |         |
 =========================================================================
 
 
-Total REAL time to Xst completion: 6.00 secs
-Total CPU time to Xst completion: 6.38 secs
+Total REAL time to Xst completion: 8.00 secs
+Total CPU time to Xst completion: 7.80 secs
  
 --> 
 
-Total memory usage is 248440 kilobytes
+Total memory usage is 252032 kilobytes
 
 Number of errors   :    0 (   0 filtered)
 Number of warnings :   11 (   0 filtered)
