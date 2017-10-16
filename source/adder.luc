@@ -1,29 +1,28 @@
 module adder (
      
-    input alufn_add[2], // control signals ALUFN[1:0] 
+    input alufn_add[2], // alufn0 and alufn1
+    input a[8], // 8bits input
+    input b[8],
     
-    input a[8], // 8 bits input a 
-    input b[8], // 8 bits input b 
+    output s[8], // 8bits output
     
-    output s[8], // 8 bits sum output
-    
-    output z, 
-    output v,
-    output n
+    output z, // it is true if output is 0's
+    output v, // it is true if has overflow
+    output n // it is ture for negative output
     
     
     
   ) {
   
    sig sum[8];
-   sig xb;
+   sig xb;  //
 
   always {
   
     case(alufn_add) {
     
       2b00: 
-        sum = a + b; 
+        sum = a + b;
       
       2b01:
         sum = a - b;
@@ -35,10 +34,10 @@ module adder (
       
       }
     
-    xb = b[7]^alufn_add; // inverts b for subtraction
-    z = (sum == 8b0); // z = 1 when all sum outputs are 0 
-    v = (a[7] & xb & !(sum[7])) | (!(a[7]) & !(xb) & sum[7]); // v = 1 if there is overflow
-    n = sum[7]; // n = 1 when sum is negative ( bit 7 = 1 )
+    xb = b[7]^alufn_add; //inverts b if doing sub
+    z = (sum == 8b0); 
+    v = (a[7] & xb & !(sum[7])) | (!(a[7]) & !(xb) & sum[7]);  
+    n = sum[7];
     s = sum;
   }
 }
