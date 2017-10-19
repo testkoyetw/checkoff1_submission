@@ -28,20 +28,9 @@ module mojo_top_0 (
   
   reg rst;
   
-  wire [8-1:0] M_alu_out;
-  reg [6-1:0] M_alu_alufn;
-  reg [8-1:0] M_alu_a;
-  reg [8-1:0] M_alu_b;
-  alu_1 alu (
-    .alufn(M_alu_alufn),
-    .a(M_alu_a),
-    .b(M_alu_b),
-    .out(M_alu_out)
-  );
-  
   wire [1-1:0] M_reset_cond_out;
   reg [1-1:0] M_reset_cond_in;
-  reset_conditioner_2 reset_cond (
+  reset_conditioner_1 reset_cond (
     .clk(clk),
     .in(M_reset_cond_in),
     .out(M_reset_cond_out)
@@ -50,36 +39,71 @@ module mojo_top_0 (
   wire [7-1:0] M_seg_seg;
   wire [4-1:0] M_seg_sel;
   reg [16-1:0] M_seg_values;
-  multi_seven_seg_3 seg (
+  multi_seven_seg_2 seg (
     .clk(clk),
     .rst(rst),
     .values(M_seg_values),
     .seg(M_seg_seg),
     .sel(M_seg_sel)
   );
-  localparam INIT_state = 5'd0;
-  localparam ADD_state = 5'd1;
-  localparam SUB_state = 5'd2;
-  localparam MULT_state = 5'd3;
-  localparam ADDERR_state = 5'd4;
-  localparam AND_state = 5'd5;
-  localparam OR_state = 5'd6;
-  localparam XOR_state = 5'd7;
-  localparam A_state = 5'd8;
-  localparam BOOLERR_state = 5'd9;
-  localparam SHL_state = 5'd10;
-  localparam SHR_state = 5'd11;
-  localparam SRA_state = 5'd12;
-  localparam SHIFTERR_state = 5'd13;
-  localparam CMPEQ_state = 5'd14;
-  localparam CMPLT_state = 5'd15;
-  localparam CMPLE_state = 5'd16;
-  localparam CMPERR_state = 5'd17;
-  localparam SS_state = 5'd18;
+  localparam IDLE_state = 5'd0;
+  localparam ADDERTEST1_state = 5'd1;
+  localparam ADDERTEST1A_state = 5'd2;
+  localparam ADDERTEST2A_state = 5'd3;
+  localparam ADDERTEST2_state = 5'd4;
+  localparam ADDERTEST3_state = 5'd5;
+  localparam ADDERTEST4_state = 5'd6;
+  localparam ADDERERRORTEST_state = 5'd7;
+  localparam ADDERERROR_state = 5'd8;
+  localparam BOOLEANTEST1_state = 5'd9;
+  localparam BOOLEANTEST2_state = 5'd10;
+  localparam BOOLEANTEST3_state = 5'd11;
+  localparam BOOLEANTEST4_state = 5'd12;
+  localparam BOOLEANERRORTEST_state = 5'd13;
+  localparam BOOLEANERROR_state = 5'd14;
+  localparam SHIFTTEST1_state = 5'd15;
+  localparam SHIFTTEST2_state = 5'd16;
+  localparam SHIFTTEST3_state = 5'd17;
+  localparam SHIFTTEST4_state = 5'd18;
+  localparam SHIFTERRORTEST_state = 5'd19;
+  localparam SHIFTERROR_state = 5'd20;
+  localparam COMPTEST1_state = 5'd21;
+  localparam COMPTEST2_state = 5'd22;
+  localparam COMPTEST3_state = 5'd23;
+  localparam COMPTEST4_state = 5'd24;
+  localparam COMPTEST5_state = 5'd25;
+  localparam COMPERRORTEST_state = 5'd26;
+  localparam COMPERROR_state = 5'd27;
+  localparam END_state = 5'd28;
   
-  reg [4:0] M_state_d, M_state_q = INIT_state;
+  reg [4:0] M_state_d, M_state_q = IDLE_state;
+  
+  reg [5:0] alufn;
+  
+  reg [7:0] a;
+  
+  reg [7:0] b;
+  
+  reg [7:0] outp;
   
   localparam X = 5'h1d;
+  
+  wire [8-1:0] M_alu1_out;
+  wire [1-1:0] M_alu1_z;
+  wire [1-1:0] M_alu1_v;
+  wire [1-1:0] M_alu1_n;
+  reg [6-1:0] M_alu1_alufn;
+  reg [8-1:0] M_alu1_a;
+  reg [8-1:0] M_alu1_b;
+  alu_3 alu1 (
+    .alufn(M_alu1_alufn),
+    .a(M_alu1_a),
+    .b(M_alu1_b),
+    .out(M_alu1_out),
+    .z(M_alu1_z),
+    .v(M_alu1_v),
+    .n(M_alu1_n)
+  );
   
   always @* begin
     M_state_d = M_state_q;
@@ -87,256 +111,505 @@ module mojo_top_0 (
     
     M_reset_cond_in = ~rst_n;
     rst = M_reset_cond_out;
-    led = 8'h00;
     spi_miso = 1'bz;
     spi_channel = 4'bzzzz;
     avr_rx = 1'bz;
-    io_led = 24'h000000;
+    led[1+5-:6] = 6'h00;
+    led[7+0-:1] = M_alu1_v;
+    led[0+0-:1] = M_alu1_n;
     io_seg = 8'hff;
-    io_led[16+7-:8] = M_alu_out;
-    M_alu_alufn = 6'h00;
-    M_alu_a = 8'h00;
-    M_alu_b = 8'h00;
+    io_sel = 4'hf;
+    a = io_dip[0+7-:8];
+    b = io_dip[8+7-:8];
+    alufn = io_dip[16+0+5-:6];
+    M_alu1_alufn = alufn;
+    M_alu1_a = a;
+    M_alu1_b = b;
+    outp = M_alu1_out;
+    io_led[16+7-:8] = outp;
+    io_led[8+7-:8] = io_dip[8+7-:8];
+    io_led[0+7-:8] = io_dip[0+7-:8];
     io_sel = ~M_seg_sel;
     io_seg = ~M_seg_seg;
     M_seg_values = 16'h0000;
     
     case (M_state_q)
-      INIT_state: begin
+      IDLE_state: begin
         M_counter_d = 1'h0;
-        io_led = 24'h000000;
-        led = 8'h00;
-        if (io_dip[8+0+0-:1] == 1'h1) begin
-          M_state_d = ADD_state;
+        if (io_button[1+0-:1] == 1'h1) begin
+          M_state_d = ADDERTEST1_state;
         end
       end
-      ADD_state: begin
-        M_alu_alufn = 6'h00;
-        M_alu_a = 8'h7f;
-        M_alu_b = 8'h01;
+      ADDERTEST1_state: begin
+        M_alu1_alufn = 6'h00;
+        M_alu1_a = 8'h05;
+        M_alu1_b = 8'h05;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h05;
+        io_led[0+7-:8] = 8'h05;
+        M_seg_values = 16'hf033;
         M_counter_d = M_counter_q + 1'h1;
-        M_seg_values = 16'h0001;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h80) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h0a) begin
           M_counter_d = 1'h0;
-          M_state_d = SUB_state;
+          M_state_d = ADDERTEST1A_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & (M_alu_out != 8'h80)) begin
-            M_state_d = ADDERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h0a) begin
+            M_counter_d = 1'h0;
+            M_state_d = ADDERERROR_state;
           end
         end
       end
-      SUB_state: begin
-        M_alu_alufn = 6'h01;
-        M_alu_a = 8'h7f;
-        M_alu_b = 8'h01;
-        M_seg_values = 16'h0002;
+      ADDERTEST1A_state: begin
+        M_alu1_alufn = 6'h00;
+        M_alu1_a = 8'h41;
+        M_alu1_b = 8'h40;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h40;
+        io_led[0+7-:8] = 8'h41;
+        M_seg_values = 16'hf033;
         M_counter_d = M_counter_q + 1'h1;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h7e) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h81) begin
           M_counter_d = 1'h0;
-          M_state_d = MULT_state;
+          M_state_d = ADDERTEST2_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h7e) begin
-            M_state_d = ADDERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h81) begin
+            M_counter_d = 1'h0;
+            M_state_d = ADDERERROR_state;
           end
         end
       end
-      MULT_state: begin
-        M_alu_alufn = 6'h02;
-        M_alu_a = 8'h7f;
-        M_alu_b = 8'h01;
+      ADDERTEST2_state: begin
+        M_alu1_alufn = 6'h01;
+        M_alu1_a = 8'h64;
+        M_alu1_b = 8'h32;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h32;
+        io_led[0+7-:8] = 8'h64;
+        M_seg_values = 16'hf971;
         M_counter_d = M_counter_q + 1'h1;
-        M_seg_values = 16'h0003;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h7f) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h32) begin
           M_counter_d = 1'h0;
-          M_state_d = AND_state;
+          M_state_d = ADDERTEST2A_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h7f) begin
-            M_state_d = ADDERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h32) begin
+            M_counter_d = 1'h0;
+            M_state_d = ADDERERROR_state;
           end
         end
       end
-      ADDERR_state: begin
-        led = 8'h03;
-        if (io_dip[8+0+0-:1] == 1'h0) begin
-          M_state_d = INIT_state;
+      ADDERTEST2A_state: begin
+        M_alu1_alufn = 6'h01;
+        M_alu1_a = 8'hb6;
+        M_alu1_b = 8'h46;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h46;
+        io_led[0+7-:8] = 8'hb6;
+        M_seg_values = 16'hf971;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h70) begin
+          M_counter_d = 1'h0;
+          M_state_d = ADDERTEST3_state;
         end
       end
-      AND_state: begin
-        M_alu_alufn = 6'h18;
-        M_alu_a = 8'h55;
-        M_alu_b = 8'hff;
+      ADDERTEST3_state: begin
+        M_alu1_alufn = 6'h02;
+        M_alu1_a = 8'h05;
+        M_alu1_b = 8'h08;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h08;
+        io_led[0+7-:8] = 8'h05;
+        M_seg_values = 16'hff75;
         M_counter_d = M_counter_q + 1'h1;
-        M_seg_values = 16'h0004;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h55) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h28) begin
           M_counter_d = 1'h0;
-          M_state_d = OR_state;
+          M_state_d = ADDERTEST4_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h55) begin
-            M_state_d = BOOLERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h28) begin
+            M_counter_d = 1'h0;
+            M_state_d = ADDERERROR_state;
           end
         end
       end
-      OR_state: begin
-        M_alu_alufn = 6'h1e;
-        M_alu_a = 8'h55;
-        M_alu_b = 8'hff;
+      ADDERTEST4_state: begin
+        M_alu1_alufn = 6'h03;
+        M_alu1_a = 8'h08;
+        M_alu1_b = 8'h02;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h02;
+        io_led[0+7-:8] = 8'h08;
         M_counter_d = M_counter_q + 1'h1;
-        M_seg_values = 16'h0005;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'hff) begin
+        M_seg_values = 16'hfff3;
+        if (M_counter_q[29+0-:1] == 1'h1 & outp == 8'h04) begin
           M_counter_d = 1'h0;
-          M_state_d = XOR_state;
+          M_state_d = ADDERERRORTEST_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'hff) begin
-            M_state_d = BOOLERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 & outp != 8'h04) begin
+            M_state_d = ADDERERROR_state;
           end
         end
       end
-      XOR_state: begin
-        M_alu_alufn = 6'h16;
-        M_alu_a = 8'h55;
-        M_alu_b = 8'hff;
+      ADDERERRORTEST_state: begin
+        M_alu1_alufn = 6'h00;
+        M_alu1_a = 8'h05;
+        M_alu1_b = 8'h07;
+        outp = M_alu1_out + 1'h1;
+        io_led[8+7-:8] = 8'h07;
+        io_led[0+7-:8] = 8'h05;
+        M_seg_values = 16'hf034;
         M_counter_d = M_counter_q + 1'h1;
-        M_seg_values = 16'h0006;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'haa) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h0c) begin
           M_counter_d = 1'h0;
-          M_state_d = A_state;
+          M_state_d = BOOLEANTEST1_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'haa) begin
-            M_state_d = BOOLERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h0c) begin
+            M_counter_d = 1'h0;
+            M_state_d = ADDERERROR_state;
           end
         end
       end
-      A_state: begin
-        M_alu_alufn = 6'h1a;
-        M_alu_a = 8'h55;
-        M_alu_b = 8'hff;
+      ADDERERROR_state: begin
+        M_seg_values = 16'hf034;
         M_counter_d = M_counter_q + 1'h1;
-        M_seg_values = 16'h0007;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h55) begin
+        if (M_counter_q[29+0-:1] == 1'h1) begin
           M_counter_d = 1'h0;
-          M_state_d = SHL_state;
+          M_state_d = BOOLEANTEST1_state;
+        end
+      end
+      BOOLEANTEST1_state: begin
+        M_alu1_alufn = 6'h18;
+        M_alu1_a = 8'hb4;
+        M_alu1_b = 8'hed;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'hed;
+        io_led[0+7-:8] = 8'hb4;
+        M_seg_values = 16'hff03;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'ha4) begin
+          M_counter_d = 1'h0;
+          M_state_d = BOOLEANTEST2_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h55) begin
-            M_state_d = BOOLERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'ha4) begin
+            M_counter_d = 1'h0;
+            M_state_d = BOOLEANERROR_state;
           end
         end
       end
-      BOOLERR_state: begin
-        led = 8'h0c;
-        if (io_dip[8+0+0-:1] == 1'h0) begin
-          M_state_d = INIT_state;
-        end
-      end
-      SHL_state: begin
-        M_alu_a = 8'hc3;
-        M_alu_b = 8'h04;
+      BOOLEANTEST2_state: begin
+        M_alu1_alufn = 6'h1e;
+        M_alu1_a = 8'h8c;
+        M_alu1_b = 8'h16;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h16;
+        io_led[0+7-:8] = 8'h8c;
+        M_seg_values = 16'hff38;
         M_counter_d = M_counter_q + 1'h1;
-        M_alu_alufn = 6'h20;
-        M_seg_values = 16'h0008;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h30) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h9e) begin
           M_counter_d = 1'h0;
-          M_state_d = SHR_state;
+          M_state_d = BOOLEANTEST3_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h30) begin
-            M_state_d = SHIFTERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h9e) begin
+            M_counter_d = 1'h0;
+            M_state_d = BOOLEANERROR_state;
           end
         end
       end
-      SHR_state: begin
-        M_alu_a = 8'hc3;
-        M_alu_b = 8'h04;
+      BOOLEANTEST3_state: begin
+        M_alu1_alufn = 6'h16;
+        M_alu1_a = 8'hf0;
+        M_alu1_b = 8'h33;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h33;
+        io_led[0+7-:8] = 8'hf0;
+        M_seg_values = 16'hf638;
         M_counter_d = M_counter_q + 1'h1;
-        M_alu_alufn = 6'h21;
-        M_seg_values = 16'h0009;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h0c) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'hc3) begin
           M_counter_d = 1'h0;
-          M_state_d = SRA_state;
+          M_state_d = BOOLEANTEST4_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h0c) begin
-            M_state_d = SHIFTERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'hc3) begin
+            M_counter_d = 1'h0;
+            M_state_d = BOOLEANERROR_state;
           end
         end
       end
-      SRA_state: begin
-        M_alu_a = 8'hc3;
-        M_alu_b = 8'h04;
+      BOOLEANTEST4_state: begin
+        M_alu1_alufn = 6'h1a;
+        M_alu1_a = 8'hd4;
+        M_alu1_b = 8'h33;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h33;
+        io_led[0+7-:8] = 8'hd4;
+        M_seg_values = 16'hfff0;
         M_counter_d = M_counter_q + 1'h1;
-        M_alu_alufn = 6'h23;
-        M_seg_values = 16'h0010;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'hfc) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'hd4) begin
           M_counter_d = 1'h0;
-          M_state_d = CMPEQ_state;
+          M_state_d = BOOLEANERRORTEST_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'hfc) begin
-            M_state_d = SHIFTERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'hd4) begin
+            M_counter_d = 1'h0;
+            M_state_d = BOOLEANERROR_state;
           end
         end
       end
-      SHIFTERR_state: begin
-        led = 8'h30;
-        if (io_dip[8+0+0-:1] == 1'h0) begin
-          M_state_d = INIT_state;
-        end
-      end
-      CMPEQ_state: begin
-        M_alu_alufn = 6'h33;
-        M_alu_a = 8'h0f;
-        M_alu_b = 8'h7f;
+      BOOLEANERRORTEST_state: begin
+        M_alu1_alufn = 6'h18;
+        M_alu1_a = 8'hd4;
+        M_alu1_b = 8'h00;
+        outp = M_alu1_out + 1'h1;
+        io_led[8+7-:8] = 8'h33;
+        io_led[0+7-:8] = 8'h00;
+        M_seg_values = 16'hf134;
         M_counter_d = M_counter_q + 1'h1;
-        M_seg_values = 16'h0011;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h00) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h00) begin
           M_counter_d = 1'h0;
-          M_state_d = CMPLT_state;
+          M_state_d = SHIFTTEST1_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h00) begin
-            M_state_d = CMPERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h00) begin
+            M_counter_d = 1'h0;
+            M_state_d = BOOLEANERROR_state;
           end
         end
       end
-      CMPLT_state: begin
-        M_alu_a = 8'h0f;
-        M_alu_b = 8'h7f;
+      BOOLEANERROR_state: begin
+        M_seg_values = 16'hf134;
         M_counter_d = M_counter_q + 1'h1;
-        M_alu_alufn = 6'h35;
-        M_seg_values = 16'h0012;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h01) begin
+        if (M_counter_q[29+0-:1] == 1'h1) begin
           M_counter_d = 1'h0;
-          M_state_d = CMPLE_state;
+          M_state_d = SHIFTTEST1_state;
+        end
+      end
+      SHIFTTEST1_state: begin
+        M_alu1_alufn = 6'h20;
+        M_alu1_a = 8'h0f;
+        M_alu1_b = 8'h04;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h04;
+        io_led[0+7-:8] = 8'h0f;
+        M_seg_values = 16'hff95;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'hf0) begin
+          M_counter_d = 1'h0;
+          M_state_d = SHIFTTEST2_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h01) begin
-            M_state_d = CMPERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'hf0) begin
+            M_counter_d = 1'h0;
+            M_state_d = SHIFTERROR_state;
           end
         end
       end
-      CMPLE_state: begin
-        M_alu_a = 8'h0f;
-        M_alu_b = 8'h7f;
+      SHIFTTEST2_state: begin
+        M_alu1_alufn = 6'h21;
+        M_alu1_a = 8'hf0;
+        M_alu1_b = 8'h02;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h02;
+        io_led[0+7-:8] = 8'hf0;
+        M_seg_values = 16'hff98;
         M_counter_d = M_counter_q + 1'h1;
-        M_alu_alufn = 6'h37;
-        M_seg_values = 16'h0013;
-        if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out == 8'h01) begin
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h3c) begin
           M_counter_d = 1'h0;
-          M_state_d = SS_state;
+          M_state_d = SHIFTTEST3_state;
         end else begin
-          if (M_counter_q[29+0-:1] == 1'h1 & M_alu_out != 8'h01) begin
-            M_state_d = CMPERR_state;
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h3c) begin
+            M_counter_d = 1'h0;
+            M_state_d = SHIFTERROR_state;
           end
         end
       end
-      CMPERR_state: begin
-        led = 8'hc0;
-        if (io_dip[8+0+0-:1] == 1'h0) begin
-          M_state_d = INIT_state;
+      SHIFTTEST3_state: begin
+        M_alu1_alufn = 6'h23;
+        M_alu1_a = 8'hfc;
+        M_alu1_b = 8'h02;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h02;
+        io_led[0+7-:8] = 8'hfc;
+        M_seg_values = 16'hf980;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'hff) begin
+          M_counter_d = 1'h0;
+          M_state_d = SHIFTTEST4_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'hff) begin
+            M_counter_d = 1'h0;
+            M_state_d = SHIFTERROR_state;
+          end
         end
       end
-      SS_state: begin
-        io_led = 24'hffffff;
-        if (io_dip[8+0+0-:1] == 1'h0) begin
-          M_state_d = INIT_state;
+      SHIFTTEST4_state: begin
+        M_alu1_alufn = 6'h22;
+        M_alu1_a = 8'hf0;
+        M_alu1_b = 8'h04;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h04;
+        io_led[0+7-:8] = 8'hf0;
+        M_seg_values = 16'hf950;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h0f) begin
+          M_counter_d = 1'h0;
+          M_state_d = SHIFTERRORTEST_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h0f) begin
+            M_counter_d = 1'h0;
+            M_state_d = SHIFTERROR_state;
+          end
         end
       end
-      default: begin
-        M_alu_alufn = 1'h0;
+      SHIFTERRORTEST_state: begin
+        M_alu1_alufn = 6'h21;
+        M_alu1_a = 8'h68;
+        M_alu1_b = 8'h02;
+        outp = M_alu1_out + 1'h1;
+        io_led[8+7-:8] = 8'h02;
+        io_led[0+7-:8] = 8'h68;
+        M_seg_values = 16'hff94;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h1a) begin
+          M_counter_d = 1'h0;
+          M_state_d = COMPTEST1_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h1a) begin
+            M_counter_d = 1'h0;
+            M_state_d = SHIFTERROR_state;
+          end
+        end
+      end
+      SHIFTERROR_state: begin
+        M_seg_values = 16'hff94;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1) begin
+          M_counter_d = 1'h0;
+          M_state_d = COMPTEST1_state;
+        end
+      end
+      COMPTEST1_state: begin
+        M_alu1_alufn = 6'h33;
+        M_alu1_a = 8'hb4;
+        M_alu1_b = 8'hb4;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'hb4;
+        io_led[0+7-:8] = 8'hb4;
+        M_seg_values = 16'hff20;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h01) begin
+          M_counter_d = 1'h0;
+          M_state_d = COMPTEST2_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h01) begin
+            M_counter_d = 1'h0;
+            M_state_d = COMPERROR_state;
+          end
+        end
+      end
+      COMPTEST2_state: begin
+        M_alu1_alufn = 6'h33;
+        M_alu1_a = 8'hb5;
+        M_alu1_b = 8'hb4;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'hb4;
+        io_led[0+7-:8] = 8'hb5;
+        M_seg_values = 16'hff20;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h00) begin
+          M_counter_d = 1'h0;
+          M_state_d = COMPTEST3_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h00) begin
+            M_counter_d = 1'h0;
+            M_state_d = COMPERROR_state;
+          end
+        end
+      end
+      COMPTEST3_state: begin
+        M_alu1_alufn = 6'h35;
+        M_alu1_a = 8'hb4;
+        M_alu1_b = 8'hb5;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'hb5;
+        io_led[0+7-:8] = 8'hb4;
+        M_seg_values = 16'hff21;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h01) begin
+          M_counter_d = 1'h0;
+          M_state_d = COMPTEST4_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h01) begin
+            M_counter_d = 1'h0;
+            M_state_d = COMPERROR_state;
+          end
+        end
+      end
+      COMPTEST4_state: begin
+        M_alu1_alufn = 6'h35;
+        M_alu1_a = 8'hb5;
+        M_alu1_b = 8'hb4;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'hb4;
+        io_led[0+7-:8] = 8'hb5;
+        M_seg_values = 16'hff21;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h00) begin
+          M_counter_d = 1'h0;
+          M_state_d = COMPTEST5_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h00) begin
+            M_counter_d = 1'h0;
+            M_state_d = COMPERROR_state;
+          end
+        end
+      end
+      COMPTEST5_state: begin
+        M_alu1_alufn = 6'h37;
+        M_alu1_a = 8'h09;
+        M_alu1_b = 8'h09;
+        outp = M_alu1_out;
+        io_led[8+7-:8] = 8'h09;
+        io_led[0+7-:8] = 8'h09;
+        M_seg_values = 16'hff22;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h01) begin
+          M_counter_d = 1'h0;
+          M_state_d = COMPERRORTEST_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h01) begin
+            M_counter_d = 1'h0;
+            M_state_d = COMPERROR_state;
+          end
+        end
+      end
+      COMPERRORTEST_state: begin
+        M_alu1_alufn = 6'h33;
+        M_alu1_a = 8'h0f;
+        M_alu1_b = 8'h0f;
+        outp = M_alu1_out + 1'h1;
+        io_led[8+7-:8] = 8'h0f;
+        io_led[0+7-:8] = 8'h0f;
+        M_seg_values = 16'hff24;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1 && outp == 8'h01) begin
+          M_counter_d = 1'h0;
+          M_state_d = END_state;
+        end else begin
+          if (M_counter_q[29+0-:1] == 1'h1 && outp != 8'h01) begin
+            M_counter_d = 1'h0;
+            M_state_d = COMPERROR_state;
+          end
+        end
+      end
+      COMPERROR_state: begin
+        M_seg_values = 16'hff24;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1) begin
+          M_counter_d = 1'h0;
+          M_state_d = END_state;
+        end
+      end
+      END_state: begin
+        M_seg_values = 16'hff43;
+        M_counter_d = M_counter_q + 1'h1;
+        if (M_counter_q[29+0-:1] == 1'h1) begin
+          M_counter_d = 1'h0;
+          M_state_d = IDLE_state;
+        end
       end
     endcase
   end

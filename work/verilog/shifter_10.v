@@ -4,42 +4,34 @@
    This is a temporary file and any changes made to it will be destroyed.
 */
 
-module adder_4 (
-    input [1:0] alufn_add,
+module shifter_10 (
+    input [1:0] alufn_shift,
     input [7:0] a,
     input [7:0] b,
-    output reg [7:0] s,
-    output reg z,
-    output reg v,
-    output reg n
+    output reg [7:0] shift
   );
   
   
   
-  reg [7:0] sum;
-  
-  reg xb;
-  
   always @* begin
+    shift = 8'h00;
     
-    case (alufn_add)
+    case (alufn_shift)
       2'h0: begin
-        sum = a + b;
+        shift = a << b[0+2-:3];
       end
       2'h1: begin
-        sum = a - b;
+        shift = a >> b[0+2-:3];
       end
       2'h2: begin
-        sum = a * b;
+        shift = $signed(a) <<< b[0+2-:3];
+      end
+      2'h3: begin
+        shift = $signed(a) >>> b[0+2-:3];
       end
       default: begin
-        sum = a - b;
+        shift = 8'h00;
       end
     endcase
-    xb = b[7+0-:1] ^ alufn_add;
-    z = (sum == 8'h00);
-    v = (a[7+0-:1] & xb & !(sum[7+0-:1])) | (!(a[7+0-:1]) & !(xb) & sum[7+0-:1]);
-    n = sum[7+0-:1];
-    s = sum;
   end
 endmodule

@@ -4,11 +4,14 @@
    This is a temporary file and any changes made to it will be destroyed.
 */
 
-module alu_1 (
+module alu_3 (
     input [5:0] alufn,
     input [7:0] a,
     input [7:0] b,
-    output reg [7:0] out
+    output reg [7:0] out,
+    output reg z,
+    output reg v,
+    output reg n
   );
   
   
@@ -20,7 +23,7 @@ module alu_1 (
   reg [2-1:0] M_add_alufn_add;
   reg [8-1:0] M_add_a;
   reg [8-1:0] M_add_b;
-  adder_4 add (
+  adder_7 add (
     .alufn_add(M_add_alufn_add),
     .a(M_add_a),
     .b(M_add_b),
@@ -35,7 +38,7 @@ module alu_1 (
   reg [1-1:0] M_compare_z;
   reg [1-1:0] M_compare_v;
   reg [1-1:0] M_compare_n;
-  comparer_5 compare (
+  comparer_8 compare (
     .alufn_cmp(M_compare_alufn_cmp),
     .z(M_compare_z),
     .v(M_compare_v),
@@ -47,7 +50,7 @@ module alu_1 (
   reg [4-1:0] M_boole_alufn_boole;
   reg [8-1:0] M_boole_a;
   reg [8-1:0] M_boole_b;
-  boolean_6 boole (
+  boolean_9 boole (
     .alufn_boole(M_boole_alufn_boole),
     .a(M_boole_a),
     .b(M_boole_b),
@@ -58,7 +61,7 @@ module alu_1 (
   reg [2-1:0] M_shift_alufn_shift;
   reg [8-1:0] M_shift_a;
   reg [8-1:0] M_shift_b;
-  shifter_7 shift (
+  shifter_10 shift (
     .alufn_shift(M_shift_alufn_shift),
     .a(M_shift_a),
     .b(M_shift_b),
@@ -95,7 +98,22 @@ module alu_1 (
       end
       default: begin
         out = 8'h00;
+        z = 1'h0;
+        v = 1'h0;
+        n = 1'h0;
       end
     endcase
+    
+    case (alufn[0+5-:6])
+      6'h02: begin
+        out = a * b;
+      end
+      6'h03: begin
+        out = a / b;
+      end
+    endcase
+    z = M_add_z;
+    v = M_add_v;
+    n = M_add_n;
   end
 endmodule

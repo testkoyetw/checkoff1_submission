@@ -27,10 +27,7 @@ module adder (
       
       2b01:
         sum = a - b;
-      
-      2b10:
-        sum = a * b;
-        
+           
       default: sum = a - b;
       
       }
