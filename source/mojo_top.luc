@@ -78,18 +78,19 @@ module mojo_top (
         blinkCounter.d = 0; 
         shift.d=0;
         
-         if(buttons.button_pressed==3b001){
-            score1.d=score1.q+1;
-            alu.alufn = 6b1;
+        // speed level selection
+         if(buttons.button_pressed==3b001){ // if red button is pressed
+            score1.d=score1.q+1; 
+            alu.alufn = 6b1; // subtract by 1 bit to double speed
             alu.a = lvlCounter.q;
             alu.b = 8b1;
             lvlCounter.d = alu.out;
             sm.d = sm.START;
           }
        
-          if(buttons.button_pressed==3b010){
+          if(buttons.button_pressed==3b010){ // if yellow button is pressed
             score1.d=score1.q+2;
-            alu.alufn = 6b1;
+            alu.alufn = 6b1; // subtract to increase speed
             alu.a = lvlCounter.q;
             alu.b = 8b10;
             lvlCounter.d = alu.out;
@@ -97,15 +98,15 @@ module mojo_top (
             
           }
         
-          if(buttons.button_pressed==3b100){
+          if(buttons.button_pressed==3b100){ // if blue button is pressed
             score1.d=score1.q+3;
-            alu.alufn = 6b1;
+            alu.alufn = 6b1; // subtract to increase speed
             alu.a = lvlCounter.q;
             alu.b = 8b11;
             lvlCounter.d = alu.out;
             sm.d = sm.START;
           }
-        if(buttons.start_pressed){
+        if(buttons.start_pressed){ // starts game
           score1.d=0;
           sm.d = sm.R0;
         }
@@ -116,21 +117,19 @@ module mojo_top (
           sm.d = sm.R0;
         }
         if(buttons.restart_pressed){
-          score0.d=0; // default and clear score if press restart
+          score0.d=0; // clear score and return to initial state
           score1.d=0;
           sm.d=sm.INIT;
         } 
         
-    // set counter.d=0 before each state
-    //score.d --> counter score point
-    //level-->level
-    sm.R0:// socre 10 will be here --> need to go to next arrangement if press correctly
-      counter.d=counter.q+1;
+   
+    sm.R0:// score 10 will be here --> need to go to next arrangement if press correctly
+      counter.d=counter.q+1; // counter for time limit
       ledC[0]=1;
-      if (counter.q[lvlCounter.q]==1){
+      if (counter.q[lvlCounter.q]==1){ // game ends if exceeds limit
         sm.d=sm.END;
       }
-      if(counter.q[1]==1 && score0.q[3]==1 & score0.q[0] == 1){  //10 (9)
+      if(counter.q[1]==1 && score0.q[3]==1 & score0.q[0] == 1){  // if score0 == 9; ledH = 1 to remind instruction change 
           ledH=1;
        }
       if(buttons.button_pressed){
@@ -139,16 +138,16 @@ module mojo_top (
         alu.a=8b001;
         alu.b=buttons.button_pressed;
         if(alu.out[0]){//press correctly  
-          if (score0.q[3] == 1 & score0.q[0] == 1 ){ //
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){ // if score0 == 9 >> 0; score1 += 1 point
             score1.d = score1.q+1;
             score0.d = 0;
           }
           else {score0.d = score0.q+1;} // +1 point
           counter.d=0;
-          if(score0.q[3]==1 & score0.q[0] == 1){  //10 (9)
+          if(score0.q[3]==1 & score0.q[0] == 1){ // if score0 == 0, change instruction 
             ledH=0;
-            ledC[0]=0; // clear the led to next state
-            sm.d=sm.R1;
+            ledC[0]=0; // off the led 
+            sm.d=sm.R1; // go to next state
            }
            else{
           ledC[0]=0;
@@ -157,10 +156,10 @@ module mojo_top (
         }
        else{
         counter.d=0;
-        sm.d=sm.END;
+        sm.d=sm.END; // end game if pressed wrongly
         }
        }
-       if(buttons.restart_pressed){
+       if(buttons.restart_pressed){ // go to initial state
         counter.d=0;
         sm.d=sm.INIT;
         }
@@ -1038,11 +1037,10 @@ module mojo_top (
         sm.d=sm.INIT;
         }
     sm.WIN:
-        ledC=3b111; // turn on all led
-       // show score on seg // do it later  
-        //show GOOD on seg  
+        ledC=3b111; // turn on all led 
+        // show GOOD on seg  
        counter.d=counter.q+1;
-       blinkCounter.d = blinkCounter.q+1; // demo to blink /////////////////////////////////
+       blinkCounter.d = blinkCounter.q+1; // blinks led
        if (blinkCounter.q[23] == 1) {
           seg.values = {4hf,4hf,4hf,4hf};
         }
@@ -1058,7 +1056,7 @@ module mojo_top (
        ledC=3b0; // turn off all led
        // show score on seg // do it later    
        counter.d=counter.q+1;
-       blinkCounter.d = blinkCounter.q+1; // demo to blink /////////////////////////////////
+       blinkCounter.d = blinkCounter.q+1; // blinks led
        if (blinkCounter.q[23] == 1) {
           seg.values = {4hf,4hf,4hf,4hf};
         }

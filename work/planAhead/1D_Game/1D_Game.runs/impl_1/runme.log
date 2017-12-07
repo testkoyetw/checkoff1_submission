@@ -3,15 +3,15 @@
     with args -intstyle ise -p xc6slx9tqg144-2 -dd _ngo -uc "mojo_top_0.ucf" "mojo_top_0.edf"
 
 
-Command Line: C:\Xilinx\14.7\ISE_DS\ISE\bin\nt64\unwrapped\ngdbuild.exe
--intstyle ise -p xc6slx9tqg144-2 -dd _ngo -uc mojo_top_0.ucf mojo_top_0.edf
+Command Line: E:\Xilinx\14.7\ISE_DS\ISE\bin\nt\unwrapped\ngdbuild.exe -intstyle
+ise -p xc6slx9tqg144-2 -dd _ngo -uc mojo_top_0.ucf mojo_top_0.edf
 
 Executing edif2ngd -quiet "mojo_top_0.edf" "_ngo\mojo_top_0.ngo"
-Release 14.7 - edif2ngd P.20131013 (nt64)
+Release 14.7 - edif2ngd P.20131013 (nt)
 Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
 Reading NGO file
-"H:/1D_Game_really_final/work/planAhead/1D_Game/1D_Game.runs/impl_1/_ngo/mojo_to
-p_0.ngo" ...
+"C:/Users/CaCO3/Desktop/1D_Game_really_final/1D_Game_really_final/work/planAhead
+/1D_Game/1D_Game.runs/impl_1/_ngo/mojo_top_0.ngo" ...
 Gathering constraint information from source properties...
 Done.
 
@@ -67,8 +67,8 @@ Updating timing models...
 INFO:Map:215 - The Interim Design Summary has been generated in the MAP Report
    (.mrp).
 Running timing-driven placement...
-Total REAL time at the beginning of Placer: 7 secs 
-Total CPU  time at the beginning of Placer: 3 secs 
+Total REAL time at the beginning of Placer: 8 secs 
+Total CPU  time at the beginning of Placer: 4 secs 
 
 Phase 1.1  Initial Placement Analysis
 Phase 1.1  Initial Placement Analysis (Checksum:36bc4b6f) REAL time: 9 secs 
@@ -82,40 +82,40 @@ Phase 3.31  Local Placement Optimization (Checksum:36bc4b6f) REAL time: 9 secs
 Phase 4.2  Initial Placement for Architecture Specific Features
 
 Phase 4.2  Initial Placement for Architecture Specific Features
-(Checksum:8c4b0a1f) REAL time: 10 secs 
+(Checksum:8c4b0a1f) REAL time: 11 secs 
 
 Phase 5.36  Local Placement Optimization
-Phase 5.36  Local Placement Optimization (Checksum:8c4b0a1f) REAL time: 10 secs 
+Phase 5.36  Local Placement Optimization (Checksum:8c4b0a1f) REAL time: 11 secs 
 
 Phase 6.30  Global Clock Region Assignment
-Phase 6.30  Global Clock Region Assignment (Checksum:8c4b0a1f) REAL time: 10 secs 
+Phase 6.30  Global Clock Region Assignment (Checksum:8c4b0a1f) REAL time: 11 secs 
 
 Phase 7.3  Local Placement Optimization
-Phase 7.3  Local Placement Optimization (Checksum:8c4b0a1f) REAL time: 10 secs 
+Phase 7.3  Local Placement Optimization (Checksum:8c4b0a1f) REAL time: 11 secs 
 
 Phase 8.5  Local Placement Optimization
-Phase 8.5  Local Placement Optimization (Checksum:8c4b0a1f) REAL time: 10 secs 
+Phase 8.5  Local Placement Optimization (Checksum:8c4b0a1f) REAL time: 11 secs 
 
 Phase 9.8  Global Placement
 ............................
 ............................................................................................................................................
 ...................
-Phase 9.8  Global Placement (Checksum:114c7c6) REAL time: 11 secs 
+Phase 9.8  Global Placement (Checksum:114c7c6) REAL time: 12 secs 
 
 Phase 10.5  Local Placement Optimization
-Phase 10.5  Local Placement Optimization (Checksum:114c7c6) REAL time: 11 secs 
+Phase 10.5  Local Placement Optimization (Checksum:114c7c6) REAL time: 12 secs 
 
 Phase 11.18  Placement Optimization
-Phase 11.18  Placement Optimization (Checksum:79246a0e) REAL time: 11 secs 
+Phase 11.18  Placement Optimization (Checksum:79246a0e) REAL time: 13 secs 
 
 Phase 12.5  Local Placement Optimization
-Phase 12.5  Local Placement Optimization (Checksum:79246a0e) REAL time: 11 secs 
+Phase 12.5  Local Placement Optimization (Checksum:79246a0e) REAL time: 13 secs 
 
 Phase 13.34  Placement Validation
-Phase 13.34  Placement Validation (Checksum:74b85bbc) REAL time: 11 secs 
+Phase 13.34  Placement Validation (Checksum:74b85bbc) REAL time: 13 secs 
 
-Total REAL time to Placer completion: 11 secs 
-Total CPU  time to Placer completion: 6 secs 
+Total REAL time to Placer completion: 13 secs 
+Total CPU  time to Placer completion: 8 secs 
 Running post-placement packing...
 Writing output files...
 
@@ -197,9 +197,9 @@ Specific Feature Utilization:
 
 Average Fanout of Non-Clock Nets:                4.15
 
-Peak Memory Usage:  359 MB
-Total REAL time to MAP completion:  12 secs 
-Total CPU time to MAP completion (all processors):   6 secs 
+Peak Memory Usage:  306 MB
+Total REAL time to MAP completion:  14 secs 
+Total CPU time to MAP completion (all processors):   9 secs 
 
 Mapping completed.
 See MAP report file "mojo_top_0.mrp" for details.
@@ -211,7 +211,7 @@ See MAP report file "mojo_top_0.mrp" for details.
 
 
 Constraints file: mojo_top_0.pcf.
-Loading device for application Rf_Device from file '6slx9.nph' in environment C:\Xilinx\14.7\ISE_DS\ISE\.
+Loading device for application Rf_Device from file '6slx9.nph' in environment E:\Xilinx\14.7\ISE_DS\ISE\.
    "mojo_top_0" is an NCD, version 3.2, device xc6slx9, package tqg144, speed -2
 
 Initializing temperature to 85.000 Celsius. (default - Range: 0.000 to 85.000 Celsius)
@@ -310,29 +310,29 @@ WARNING:Par:288 - The signal spi_mosi_IBUF has no load.  PAR will not attempt to
 Starting Multi-threaded Router
 
 
-Phase  1  : 2688 unrouted;      REAL time: 2 secs 
+Phase  1  : 2688 unrouted;      REAL time: 3 secs 
 
-Phase  2  : 2402 unrouted;      REAL time: 2 secs 
+Phase  2  : 2402 unrouted;      REAL time: 3 secs 
 
-Phase  3  : 1333 unrouted;      REAL time: 3 secs 
+Phase  3  : 1333 unrouted;      REAL time: 4 secs 
 
-Phase  4  : 1333 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 3 secs 
+Phase  4  : 1333 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 4 secs 
 
 Updating file: mojo_top_0_routed.ncd with current fully routed design.
 
-Phase  5  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 4 secs 
+Phase  5  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 5 secs 
 
-Phase  6  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 4 secs 
+Phase  6  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 5 secs 
 
-Phase  7  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 4 secs 
+Phase  7  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 5 secs 
 
-Phase  8  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 4 secs 
+Phase  8  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 5 secs 
 
-Phase  9  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 4 secs 
+Phase  9  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 5 secs 
 
-Phase 10  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 4 secs 
-Total REAL time to Router completion: 4 secs 
-Total CPU time to Router completion (all processors): 4 secs 
+Phase 10  : 0 unrouted; (Setup:0, Hold:0, Component Switching Limit:0)     REAL time: 5 secs 
+Total REAL time to Router completion: 5 secs 
+Total CPU time to Router completion (all processors): 6 secs 
 
 Generating "PAR" statistics.
 
@@ -377,10 +377,10 @@ All signals are completely routed.
 
 WARNING:Par:283 - There are 6 loadless signals in this design. This design will cause Bitgen to issue DRC warnings.
 
-Total REAL time to PAR completion: 4 secs 
-Total CPU time to PAR completion (all processors): 4 secs 
+Total REAL time to PAR completion: 6 secs 
+Total CPU time to PAR completion (all processors): 6 secs 
 
-Peak Memory Usage:  325 MB
+Peak Memory Usage:  292 MB
 
 Placer: Placement generated during map.
 Routing: Completed - No errors found.
@@ -400,25 +400,25 @@ PAR done!
     with args -intstyle ise -o "mojo_top_0.twr" -v 30 -l 30 "mojo_top_0_routed.ncd" "mojo_top_0.pcf"
 
 Loading device for application Rf_Device from file '6slx9.nph' in environment
-C:\Xilinx\14.7\ISE_DS\ISE\.
+E:\Xilinx\14.7\ISE_DS\ISE\.
    "mojo_top_0" is an NCD, version 3.2, device xc6slx9, package tqg144, speed -2
 
-Analysis completed Thu Dec 07 20:19:38 2017
+Analysis completed Fri Dec 08 01:47:08 2017
 --------------------------------------------------------------------------------
 
 Generating Report ...
 
 Number of warnings: 0
-Total time: 2 secs 
+Total time: 3 secs 
 
 *** Running xdl
     with args -secure -ncd2xdl -nopips "mojo_top_0_routed.ncd" "mojo_top_0_routed.xdl"
 
-Release 14.7 - xdl P.20131013 (nt64)
+Release 14.7 - xdl P.20131013 (nt)
 Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
 
 WARNING:XDL:213 - The resulting xdl output will not have LUT equation strings or RAM INIT strings.
-Loading device for application Rf_Device from file '6slx9.nph' in environment C:\Xilinx\14.7\ISE_DS\ISE\.
+Loading device for application Rf_Device from file '6slx9.nph' in environment E:\Xilinx\14.7\ISE_DS\ISE\.
    "mojo_top_0" is an NCD, version 3.2, device xc6slx9, package tqg144, speed -2
 Successfully converted design 'mojo_top_0_routed.ncd' to 'mojo_top_0_routed.xdl'.
 

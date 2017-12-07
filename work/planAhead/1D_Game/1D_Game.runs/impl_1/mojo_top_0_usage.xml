@@ -5,7 +5,7 @@
      behavior or data corruption.  It is strongly advised that
      users do not edit the contents of this file. -->
 <DeviceUsageSummary rev="2">
-<DesignStatistics TimeStamp="Thu Dec 07 20:19:53 2017"><group name="NetStatistics">
+<DesignStatistics TimeStamp="Fri Dec 08 01:47:22 2017"><group name="NetStatistics">
 <item name="NumNets_Active" rev="2">
 <attrib name="value" value="682"/></item>
 <item name="NumNets_Gnd" rev="2">
@@ -109,20 +109,6 @@
 <item name="NumNodesOfType_Vcc_PINFEED" rev="2">
 <attrib name="value" value="177"/></item>
 </group>
-<group name="SiteStatistics">
-<item name="BUFG-BUFGMUX" rev="2">
-<attrib name="value" value="1"/></item>
-<item name="IOB-IOBM" rev="2">
-<attrib name="value" value="21"/></item>
-<item name="IOB-IOBS" rev="2">
-<attrib name="value" value="19"/></item>
-<item name="SLICEL-SLICEM" rev="2">
-<attrib name="value" value="20"/></item>
-<item name="SLICEX-SLICEL" rev="2">
-<attrib name="value" value="18"/></item>
-<item name="SLICEX-SLICEM" rev="2">
-<attrib name="value" value="38"/></item>
-</group>
 <group name="MiscellaneousStatistics">
 <item name="AGG_BONDED_IO" rev="1">
 <attrib name="value" value="40"/></item>
@@ -189,8 +175,22 @@
 <item name="NUM_UNUSABLE_FF_BELS" rev="1">
 <attrib name="value" value="45"/></item>
 </group>
+<group name="SiteStatistics">
+<item name="BUFG-BUFGMUX" rev="2">
+<attrib name="value" value="1"/></item>
+<item name="IOB-IOBM" rev="2">
+<attrib name="value" value="21"/></item>
+<item name="IOB-IOBS" rev="2">
+<attrib name="value" value="19"/></item>
+<item name="SLICEL-SLICEM" rev="2">
+<attrib name="value" value="20"/></item>
+<item name="SLICEX-SLICEL" rev="2">
+<attrib name="value" value="18"/></item>
+<item name="SLICEX-SLICEM" rev="2">
+<attrib name="value" value="38"/></item>
+</group>
 </DesignStatistics>
-<DeviceUsage TimeStamp="Thu Dec 07 20:19:53 2017"><group name="SiteSummary">
+<DeviceUsage TimeStamp="Fri Dec 08 01:47:22 2017"><group name="SiteSummary">
 <item name="BUFG" rev="2">
 <attrib name="total" value="1000000"/><attrib name="used" value="1"/></item>
 <item name="BUFG_BUFG" rev="2">
@@ -241,7 +241,7 @@
 <attrib name="total" value="1000000"/><attrib name="used" value="114"/></item>
 </group>
 </DeviceUsage>
-<ReportConfigData TimeStamp="Thu Dec 07 20:19:53 2017"><group name="REG_SR">
+<ReportConfigData TimeStamp="Fri Dec 08 01:47:22 2017"><group name="REG_SR">
 <item name="CK" rev="2">
 <attrib name="CK" value="218"/><attrib name="CK_INV" value="0"/></item>
 <item name="LATCH_OR_FF" rev="2">
@@ -314,7 +314,7 @@
 <attrib name="ASYNC" value="1"/><attrib name="SYNC" value="3"/></item>
 </group>
 </ReportConfigData>
-<ReportPinData TimeStamp="Thu Dec 07 20:19:53 2017"><group name="REG_SR">
+<ReportPinData TimeStamp="Fri Dec 08 01:47:22 2017"><group name="REG_SR">
 <item name="CE" rev="2">
 <attrib name="value" value="160"/></item>
 <item name="CK" rev="2">
@@ -632,10 +632,6 @@
 <item name="O" rev="2">
 <attrib name="value" value="1"/></item>
 </group>
-<group name="PULL_OR_KEEP1">
-<item name="PAD" rev="2">
-<attrib name="value" value="12"/></item>
-</group>
 <group name="PAD">
 <item name="PAD" rev="2">
 <attrib name="value" value="40"/></item>
@@ -645,6 +641,10 @@
 <attrib name="value" value="13"/></item>
 <item name="PAD" rev="2">
 <attrib name="value" value="13"/></item>
+</group>
+<group name="PULL_OR_KEEP1">
+<item name="PAD" rev="2">
+<attrib name="value" value="12"/></item>
 </group>
 <group name="OLOGIC2">
 <item name="CLK0" rev="2">
@@ -691,18 +691,6 @@
 <attrib name="value" value="47"/></item>
 <item name="S3" rev="2">
 <attrib name="value" value="46"/></item>
-</group>
-<group name="OLOGIC2_OUTFF">
-<item name="CE" rev="2">
-<attrib name="value" value="3"/></item>
-<item name="CK0" rev="2">
-<attrib name="value" value="3"/></item>
-<item name="D1" rev="2">
-<attrib name="value" value="3"/></item>
-<item name="Q" rev="2">
-<attrib name="value" value="3"/></item>
-<item name="SR" rev="2">
-<attrib name="value" value="3"/></item>
 </group>
 <group name="LUT5">
 <item name="A1" rev="2">
@@ -765,6 +753,18 @@
 <attrib name="value" value="27"/></item>
 <item name="PAD" rev="2">
 <attrib name="value" value="40"/></item>
+</group>
+<group name="OLOGIC2_OUTFF">
+<item name="CE" rev="2">
+<attrib name="value" value="3"/></item>
+<item name="CK0" rev="2">
+<attrib name="value" value="3"/></item>
+<item name="D1" rev="2">
+<attrib name="value" value="3"/></item>
+<item name="Q" rev="2">
+<attrib name="value" value="3"/></item>
+<item name="SR" rev="2">
+<attrib name="value" value="3"/></item>
 </group>
 <group name="HARD0">
 <item name="0" rev="2">
