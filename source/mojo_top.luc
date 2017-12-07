@@ -1,0 +1,1074 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input cclk,             // configuration clock, AVR ready when high
+    output spi_miso,        // AVR SPI MISO
+    input spi_ss,           // AVR SPI Slave Select
+    input spi_mosi,         // AVR SPI MOSI
+    input spi_sck,          // AVR SPI Clock
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    input avr_tx,           // AVR TX (FPGA RX)
+    output avr_rx,          // AVR RX (FPGA TX)
+    input avr_rx_busy,       // AVR RX buffer full
+    input button[3],
+    input startbtn,
+    input restartbtn,
+    output ledC[3],
+    output ledH,
+    output ledclg[3],
+    output io_seg[8],
+    output io_sel[4]
+  ) {
+  
+  sig rst;                  // reset signal
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+    .rst(rst){
+      dff score0[4];
+      dff score1[4];
+      button buttons;
+      dff counter[30];
+      dff lvlCounter[8];
+      dff blinkCounter[24];
+      dff shift[8];
+      multi_seven_seg seg;
+      fsm sm={INIT,START,CHECKLVL,R0,Y0,B0,R1,B1,Y1,B2_0,B2_1,Y2,R2,Y3,B3,R3,Y4_0,Y4_1,B4,R4,B5,Y5,R5,B6,R6,Y6,R7_0,R7_1,Y7,B7,WIN,END};
+  }
+  }
+  alu alu; // HAVE fast and slow frequency for clock.
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    
+    led = 8b0; 
+    ledC = 3b0;
+    ledH=0;
+    ledclg =shift.q[2:0];
+    io_seg = 8hff;
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+    
+    // button module
+    buttons.start = ~startbtn;
+    buttons.restart = ~restartbtn;
+    buttons.button = ~button;
+      
+    //alu modlue
+    alu.alufn = 6b0;
+    alu.a = 8b0;
+    alu.b = 8b0;
+    
+    io_sel=~seg.sel;
+    io_seg=~seg.seg;
+    seg.values = {score1.q[3:0],score0.q[3:0],4h0,4h0};
+    
+  
+      
+    case(sm.q){
+        sm.INIT:
+        score0.d=0; // default and clear score if press restart
+        score1.d=0;
+        counter.d =0;    
+        lvlCounter.d= 28;
+        blinkCounter.d = 0; 
+        shift.d=0;
+        
+         if(buttons.button_pressed==3b001){
+            score1.d=score1.q+1;
+            alu.alufn = 6b1;
+            alu.a = lvlCounter.q;
+            alu.b = 8b1;
+            lvlCounter.d = alu.out;
+            sm.d = sm.START;
+          }
+       
+          if(buttons.button_pressed==3b010){
+            score1.d=score1.q+2;
+            alu.alufn = 6b1;
+            alu.a = lvlCounter.q;
+            alu.b = 8b10;
+            lvlCounter.d = alu.out;
+            sm.d = sm.START;
+            
+          }
+        
+          if(buttons.button_pressed==3b100){
+            score1.d=score1.q+3;
+            alu.alufn = 6b1;
+            alu.a = lvlCounter.q;
+            alu.b = 8b11;
+            lvlCounter.d = alu.out;
+            sm.d = sm.START;
+          }
+        if(buttons.start_pressed){
+          score1.d=0;
+          sm.d = sm.R0;
+        }
+    
+      sm.START:
+        if(buttons.start_pressed){
+          score1.d=0;
+          sm.d = sm.R0;
+        }
+        if(buttons.restart_pressed){
+          score0.d=0; // default and clear score if press restart
+          score1.d=0;
+          sm.d=sm.INIT;
+        } 
+        
+    // set counter.d=0 before each state
+    //score.d --> counter score point
+    //level-->level
+    sm.R0:// socre 10 will be here --> need to go to next arrangement if press correctly
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+      }
+      if(counter.q[1]==1 && score0.q[3]==1 & score0.q[0] == 1){  //10 (9)
+          ledH=1;
+       }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){ //
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;} // +1 point
+          counter.d=0;
+          if(score0.q[3]==1 & score0.q[0] == 1){  //10 (9)
+            ledH=0;
+            ledC[0]=0; // clear the led to next state
+            sm.d=sm.R1;
+           }
+           else{
+          ledC[0]=0;
+          sm.d=sm.Y0;
+          }
+        }
+       else{
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+  
+  
+    sm.Y0: // 0:1,2,3 going to Blue
+      counter.d=counter.q+1;
+      ledC[1]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+      }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[1]=0;
+          sm.d=sm.B0;
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+  
+    sm.B0:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC=3b0;
+          sm.d=sm.R0; // return back to R0
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+                
+    sm.R1:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[0]=0;
+          sm.d=sm.B1; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B1:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+      }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[2]=0;
+          sm.d=sm.Y1; 
+          }
+        else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y1:
+      counter.d=counter.q+1;
+      ledC[1]=1;
+      if(counter.q[1]==1 && score1.q[1]==1 & score0.q[0]==1 & score0.q[1]==1 & score0.q[2]==1){ //27
+            ledH=1; // notice player that after next press it will change the arrangement
+      }
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+      }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          if(score1.q[1]==1 & score0.q[0]==1 & score0.q[1]==1 & score0.q[2]==1){ //27
+            ledC[1]=0;
+            ledH=0;
+            sm.d=sm.B2_0;
+           }
+           else{
+            ledC[1]=0;
+            sm.d=sm.R1;
+           }
+         }
+         else{
+          counter.d=0;
+          sm.d=sm.END;
+          }
+        }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B2_0:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[2]=0;
+          sm.d=sm.B2_1; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B2_1:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[2]=0;
+          sm.d=sm.Y2; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y2:
+      counter.d=counter.q+1;
+      ledC[1]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[1]=0;
+          sm.d=sm.R2; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.R2:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      if(counter.q[1]==1 && score1.q[0]==1 & score1.q[1]==1 & score0.q[0]==1 & score0.q[2]==1){ //35
+            ledH=1; // notice player that after next press it will change the arrangement
+       }
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          if(score1.q[0]==1 & score1.q[1]==1 & score0.q[0]==1 & score0.q[2]==1){ //36
+            ledH=0;//off the ledH
+            ledC[0]=0;
+            sm.d=sm.Y3;
+           }
+           else{
+          ledC=3b000;
+          sm.d=sm.B2_0;
+          }
+        }
+       else{
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y3:
+      counter.d=counter.q+1;
+      ledC[1]=1;       
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[1]=0;
+          sm.d=sm.B3; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B3:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      if(counter.q[1]==1 && score1.q[2]==1 && score0.q[1]==1 && score0.q[2]==1){ //46
+              shift.d=8b1; // notice player that next arrangemet=> R led need to press yellow button
+              ledH=1; // notice player that after next press it will change the arrangement
+       }
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+      }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          if(score1.q[2]==1 && score0.q[1]==1 && score0.q[2]==1){ //47
+            ledH=0;//off the ledH
+            ledC[2]=0;
+            sm.d=sm.Y4_0;
+           }
+           else{
+          ledC[2]=0;
+          sm.d=sm.R3;
+          }
+        }
+       else{
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.R3:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[0]=1;
+          sm.d=sm.Y3; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y4_0:
+      counter.d=counter.q+1;
+      ledC[1]=1; // Y light up
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+      }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001; //Y->R
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[1]=0;
+          sm.d=sm.Y4_1; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y4_1:
+      counter.d=counter.q+1;
+      ledC[1]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[1]=0;
+          sm.d=sm.B4; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B4:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      if(counter.q[1]==1 && score1.q[0]==1 && score1.q[2]==1 && score0.q[0]==1 &&score0.q[2]==1){ //55
+         ledH=1; // notice player that after next press it will change the arrangement
+      }
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1  ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          if(score1.q[0]==1 && score1.q[2]==1 && score0.q[0]==1 &&score0.q[2]==1){ //56 0101  0110
+            ledH=0;//off the ledH
+            ledC[2]=0;
+            sm.d=sm.B5;
+           }
+           else{
+            ledC[2]=0;
+            sm.d=sm.R4;
+          }
+        }
+       else{
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.R4:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[0]=1;
+          sm.d=sm.Y4_0; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B5:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[2]=1;
+          sm.d=sm.Y5; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y5:
+      counter.d=counter.q+1;
+      ledC[1]=1;
+      if(counter.q[1]==1 && score1.q[0]==1 && score1.q[1]==1 && score1.q[2]==1 && score0.q[0]==1 && score0.q[2]==1){ //75
+              ledH=1; // notice player that after next press it will change the arrangement
+      }
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          if(score1.q[0]==1 && score1.q[1]==1 && score1.q[2]==1 && score0.q[0]==1 && score0.q[2]==1){ //76  0111 0110
+            ledH=0;//off the ledH
+            ledC[1]=0;
+            sm.d=sm.B6;
+           }
+           else{
+          ledC[1]=0;
+          sm.d=sm.R5;
+          }
+        }
+       else{
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.R5:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[0]=0;
+          sm.d=sm.B5; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B6:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      //shift left
+      alu.alufn=6b100000;
+      alu.a=001;
+      alu.b=8b1;
+      shift.d=alu.out;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[2]=0;
+          sm.d=sm.R6; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.R6:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      alu.alufn=6b100000;
+      alu.a=001;
+      alu.b=8b1;
+      shift.d=alu.out;
+      if(counter.q[1]==1 && score1.q[3]==1){ //80
+              ledH=1; // notice player that after next press it will change the arrangement
+       }
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          if(score1.q[3]==1){ //81
+            ledH=0;//off the ledH
+            ledC[0]=0;
+            sm.d=sm.R7_0;
+           }
+           else{
+          ledC[0]=0;
+          sm.d=sm.Y6;
+          }
+        }
+       else{
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y6:
+      counter.d=counter.q+1;
+      ledC[1]=1;
+      alu.alufn=6b100000;
+      alu.a=001;
+      alu.b=8b1;
+      shift.d=alu.out;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[1]=0;
+          sm.d=sm.B6; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }     
+    sm.R7_0:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      alu.alufn=6b100000;
+      alu.a=001;
+      alu.b=8b10;
+      shift.d=alu.out;
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[0]=1;
+          sm.d=sm.R7_1; 
+          }
+       else{ // press wrongly
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.R7_1:
+      counter.d=counter.q+1;
+      ledC[0]=1;
+      alu.alufn=6b100000;
+      alu.a=001;
+      alu.b=8b10;
+      shift.d=alu.out;
+     if(score0.q[3] ==0 && score0.q[0]==0 && score0.q[1]==0 && score0.q[2]==0){ //99
+          sm.d=sm.WIN;
+      }
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1  ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC[0]=1;
+          sm.d=sm.Y7; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.Y7:
+      counter.d=counter.q+1;
+      ledC[1]=1;
+      alu.alufn=6b100000;
+      alu.a=001;
+      alu.b=8b10;
+      shift.d=alu.out;        
+      if (counter.q[lvlCounter.q]==1){
+        sm.d=sm.END;
+       }
+
+      if(buttons.button_pressed){  
+        alu.alufn=6b110011;
+        alu.a=8b100;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly 
+         if (score0.q[3] == 1 & score0.q[0] == 1  ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          sm.d=sm.B7;
+        }
+          else{ // press wrongly
+        sm.d=sm.END;
+        }
+        }        
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.B7:
+      counter.d=counter.q+1;
+      ledC[2]=1;
+      alu.alufn=6b100000;
+      alu.a=001;
+      alu.b=8b10;
+      shift.d=alu.out;
+      if (counter.q==lvlCounter.q){
+        sm.d=sm.END;
+    }
+      if(buttons.button_pressed){
+        // alu: a,b,alufn
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        if(alu.out[0]){//press correctly  
+          if (score0.q[3] == 1 & score0.q[0] == 1 ){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          counter.d=0;
+          ledC=3b000;
+          sm.d=sm.R7_0; 
+          }
+       else{ // press wrongly
+        counter.d=0;
+        sm.d=sm.END;
+        }
+       }
+       if(buttons.restart_pressed){
+        counter.d=0;
+        sm.d=sm.INIT;
+        }
+    sm.WIN:
+        ledC=3b111; // turn on all led
+       // show score on seg // do it later  
+        //show GOOD on seg  
+       counter.d=counter.q+1;
+       blinkCounter.d = blinkCounter.q+1; // demo to blink /////////////////////////////////
+       if (blinkCounter.q[23] == 1) {
+          seg.values = {4hf,4hf,4hf,4hf};
+        }
+       else {seg.values = {4h9,4h9,4h9,4h9};}
+       if(counter.q[28]==1){
+           counter.d=0;
+           score0.d=0;// clear the score
+           score1.d=0;
+           sm.d = sm.INIT;
+        }
+
+    sm.END:
+       ledC=3b0; // turn off all led
+       // show score on seg // do it later    
+       counter.d=counter.q+1;
+       blinkCounter.d = blinkCounter.q+1; // demo to blink /////////////////////////////////
+       if (blinkCounter.q[23] == 1) {
+          seg.values = {4hf,4hf,4hf,4hf};
+        }
+       else {seg.values = {score1.q[3:0],score0.q[3:0],4h0,4h0};}
+       if(counter.q[28]==1){
+           counter.d=0;
+           score0.d=0;// clear the score
+           score1.d=0;
+           sm.d = sm.INIT;
+        }
+  }
+}
+}

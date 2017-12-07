@@ -1,0 +1,49 @@
+module button (
+    input clk,
+    input rst,
+    input button[3],
+    input start,
+    input restart,
+    output button_pressed[3],
+    output start_pressed,
+    output restart_pressed
+  ) {
+  
+    
+  
+  .clk(clk) {
+     button_conditioner buttonR_cond;
+     edge_detector buttonR_edge(#RISE(1), #FALL(0));
+    
+     button_conditioner buttonY_cond;
+     edge_detector buttonY_edge(#RISE(1), #FALL(0));
+    
+     button_conditioner buttonB_cond;
+     edge_detector buttonB_edge(#RISE(1), #FALL(0));
+    
+     button_conditioner restart_cond;
+     edge_detector restart_edge(#RISE(1), #FALL(0));
+    
+     button_conditioner start_cond;
+     edge_detector start_edge(#RISE(1), #FALL(0));
+     .rst(rst){}
+  }
+  always {
+    buttonR_cond.in = button[0];
+    buttonR_edge.in = buttonR_cond.out;
+    buttonY_cond.in = button[1];
+    buttonY_edge.in = buttonY_cond.out;
+    buttonB_cond.in = button[2];
+    buttonB_edge.in = buttonB_cond.out;
+    restart_cond.in = restart;
+    restart_edge.in = restart_cond.out;
+    start_cond.in = start;
+    start_edge.in = start_cond.out;
+    
+    start_pressed = start_edge.out;
+    restart_pressed = restart_edge.out;
+    button_pressed[0] = buttonR_edge.out;
+    button_pressed[1] = buttonY_edge.out;
+    button_pressed[2] = buttonB_edge.out;
+  }
+}
