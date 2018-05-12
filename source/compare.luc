@@ -1,0 +1,33 @@
+module compare (
+    
+    input alufn_cmp[2], // ALUFN[2:1]
+
+    // z, v, n outputs from adder
+    input z, 
+    input v,
+    input n,
+    
+    output cmp[8] 
+    
+  ) {
+  
+  always {
+    
+    cmp[7:1] = 8b0; // high order 7 bits are always 0
+    
+    case(alufn_cmp){
+    
+      2b00:
+        cmp[0] = 0;
+      2b10:
+        cmp[0] = n ^ v; // a < b
+      2b01:    
+        cmp[0] = z; // a = b
+      2b11:
+        cmp[0] = z | (n ^ v); // a <= b
+      default:
+        cmp[0] = 0;
+    
+  }
+ }
+}

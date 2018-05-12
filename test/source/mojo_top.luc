@@ -1,0 +1,356 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input cclk,             // configuration clock, AVR ready when high
+    output spi_miso,        // AVR SPI MISO
+    input spi_ss,           // AVR SPI Slave Select
+    input spi_mosi,         // AVR SPI MOSI
+    input spi_sck,          // AVR SPI Clock
+    output io_seg [8],      // 7-segment LEDs on IO Shield
+    output io_sel [4],      // Digit select on IO Shield
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    input avr_tx,           // AVR TX (FPGA RX)
+    output avr_rx,          // AVR RX (FPGA TX)
+    input avr_rx_busy,      // AVR RX buffer full
+    input button[3],        
+    
+    output gled,
+    output bled,
+    output cled,
+    output ledclg[3]
+  ) {
+   
+  sig rst;                  // reset signal
+  alu alu;
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+     
+   .rst(rst){
+      dff counter[30]; // speed counter
+      dff score0[4]; // score counter
+      dff score1[4];
+      dff shift[8]; // shift counter
+      
+      fsm state = {INIT,TEST0,TEST1,TEST2,TEST3,TEST4,TEST5,TEST6,END}; // test states
+      button buttons;
+      multi_seven_seg seg;
+      
+      dff lvlCounter[8]; // for changing game speed 
+     
+    }
+  }
+  
+   
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+    
+    
+    io_seg = 8hff;          // turn segments off
+    led = lvlCounter.q;
+    
+    // led
+    gled = 0;
+    bled = 0;
+    cled = 0;
+    
+    // shift test led
+    ledclg =shift.q[2:0];
+    
+    // button module
+    buttons.button = ~button;
+    
+    // alu module
+    alu.alufn = 6b0;
+    alu.a = 8b0;
+    alu.b = 8b0;
+      
+    io_sel = ~seg.sel;
+    io_seg = ~seg.seg;
+    seg.values = {score1.q,score0.q,4h0,4h0};
+    
+      
+    case (state.q){
+    
+      state.INIT:  // initial state
+
+        gled = 0;
+        bled = 0;
+        cled = 0;
+        counter.d = 0;
+        score0.d = 0;
+        score1.d = 0;
+        shift.d = 0;
+        
+        lvlCounter.d=8b11100; // initial speed
+      
+        // slow level
+        if (buttons.button_pressed == 3b010){        
+          state.d = state.TEST0;
+              
+        }
+          
+        // fast level
+        else if (buttons.button_pressed == 3b001){
+        
+          alu.alufn = 6b1;
+          alu.a = lvlCounter.q; // subtract to increase speed
+          alu.b = 8b1;
+          lvlCounter.d = alu.out;
+                        
+          state.d = state.TEST4;
+        }   
+        
+    
+      state.TEST0: 
+
+        gled = 1;
+        counter.d = counter.q+1;
+        if (score1.q[1] == 1){state.d = state.TEST6;} // change instruction if score > 1900;
+        
+        if (buttons.button_pressed){
+            alu.alufn=6b110011;
+            alu.a=8b001;
+            alu.b=buttons.button_pressed;
+          
+          if (alu.out[0]) {
+        
+            counter.d = 0;
+            gled = 0;
+          
+            if (score0.q[3] == 1 & score0.q[0] == 1){ // 9 >> 0
+              score1.d = score1.q+1; // 09 >> 10
+              score0.d = 0;
+            }
+            else {
+              score0.d = score0.q+1;
+            }
+
+            state.d = state.TEST1;
+          }
+          else { // pressed wrongly
+            gled = 0;
+            counter.d = 0;
+            state.d = state.INIT;             
+          
+          }
+        }
+        if (counter.q[lvlCounter.q] == 1) {
+          gled = 0;
+          counter.d = 0;
+          state.d = state.INIT; // back to initial state when exceeds time limit or pressed wrongly
+        }
+          
+        
+      state.TEST1: 
+              
+        bled = 1;
+        counter.d = counter.q+1;
+        if (score1.q[1] == 1){state.d = state.TEST2;} // change instruction if score > 1900; 
+          
+        if (buttons.button_pressed){
+            alu.alufn=6b110011;
+            alu.a=8b001;
+            alu.b=buttons.button_pressed;
+        
+          if (alu.out[0]) { 
+        
+            counter.d = 0;
+            bled = 0;
+          
+            if (score0.q[3] == 1 & score0.q[0] == 1){ // 9 >> 0  
+              score1.d = score1.q+1;
+              score0.d = 0;
+            }
+            else {
+              score0.d = score0.q+1;
+            }
+            state.d = state.TEST0;
+         }
+         else { // pressed wrongly
+            gled = 0;
+            counter.d = 0;
+            state.d = state.INIT;             
+          }
+        }
+        if (counter.q[lvlCounter.q] == 1) {
+          bled = 0;
+          counter.d = 0;
+          state.d = state.INIT;
+        }
+
+        
+      state.TEST2: 
+         
+        cled = 1;
+        counter.d = counter.q+1;
+        
+        if (score1.q[2] == 1){state.d = state.END;} // end game when score = 4000
+        
+        if (buttons.button_pressed){
+        
+        alu.alufn=6b110011;
+        alu.a=8b001;
+        alu.b=buttons.button_pressed;
+        
+        if ( alu.out[0] ) { 
+         
+          counter.d = 0;
+          cled = 0;
+          if (score0.q[3] == 1 & score0.q[0] == 1){    
+              score1.d = score1.q+1;
+              score0.d = 0;
+          }
+          else {score0.d = score0.q+1;}
+          state.d = state.TEST3;
+        }
+        else { // pressed wrongly
+            gled = 0;
+            counter.d = 0;
+            state.d = state.INIT;             
+          }
+        }
+        if (counter.q[lvlCounter.q] == 1) {
+          cled = 0;
+          counter.d = 0;
+          state.d = state.INIT;
+        }
+        
+        
+      state.TEST3: 
+             
+        gled = 1;
+        counter.d = counter.q+1;
+        if (score1.q[2] == 1){state.d = state.END;} // end game when score = 4000
+        
+        if (buttons.button_pressed){
+        
+        alu.alufn=6b110011;
+        alu.a=8b010;
+        alu.b=buttons.button_pressed;
+        
+        if (alu.out[0]) {
+        
+          counter.d = 0;
+          gled = 0;
+          if (score0.q[3] == 1 & score0.q[0] == 1){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {
+            score0.d = score0.q+1;
+          
+            }
+
+          state.d = state.TEST2;
+          }
+         else { // pressed wrongly
+            gled = 0;
+            counter.d = 0;
+            state.d = state.INIT;             
+          }
+        }
+        if (counter.q[lvlCounter.q] == 1 ) {
+          gled = 0;
+          counter.d = 0;
+          state.d = state.INIT;
+        }
+        
+        
+      state.TEST4:      
+      
+        cled = 1;
+        counter.d = counter.q+1;
+        if (score1.q[1] == 1){state.d = state.TEST2;} // change instruction if score > 1900; 
+        
+        if (buttons.button_pressed){
+          alu.alufn=6b110011;
+          alu.a=8b010;
+          alu.b=buttons.button_pressed;
+
+        if (alu.out[0]) {
+        
+          counter.d = 0;
+          cled = 0;
+          if (score0.q[3] == 1 & score0.q[0] == 1){
+            score1.d = score1.q+1;
+            score0.d = 0;
+          }
+          else {
+            score0.d = score0.q+1; 
+            }
+
+          state.d = state.TEST5;
+          }
+         else { // pressed wrongly
+            gled = 0;
+            counter.d = 0;
+            state.d = state.INIT;             
+          }
+        }
+        if (counter.q[lvlCounter.q] == 1 ) {
+          cled = 0;
+          counter.d = 0;
+          state.d = state.INIT;
+        }
+          
+        
+      state.TEST5: 
+        
+        bled = 1;
+        counter.d = counter.q+1;
+        if (score1.q[1] == 1){state.d = state.TEST2;} // change instruction if score > 1900; 
+        
+        if (buttons.button_pressed){
+          alu.alufn=6b110011;
+          alu.a=8b100;
+          alu.b=buttons.button_pressed;
+        
+        if (alu.out[0]) {  
+          counter.d = 0;
+          bled = 0;
+          if (score0.q[3] == 1 & score0.q[0] == 1){    
+              score1.d = score1.q+1;
+              score0.d = 0;
+          }
+          else {
+            score0.d = score0.q+1;
+      
+            }
+          state.d = state.TEST4;
+         }
+         else { // pressed wrongly
+            gled = 0;
+            counter.d = 0;
+            state.d = state.INIT;             
+          }
+        }
+        if (counter.q[lvlCounter.q] == 1) {
+          bled = 0;
+          counter.d = 0;
+          state.d = state.INIT;
+        }  
+        
+      state.TEST6:
+        alu.alufn=6b100000; // shift left to change instruction light
+        alu.a=shift.q;
+        alu.b=8b1;
+        shift.d = alu.out;
+        state.d=state.TEST2; 
+  
+                     
+      state.END:      
+        gled = 1;
+        bled = 1;
+        counter.d = 0;
+     }   
+    
+}
+}

@@ -1,0 +1,36 @@
+module boole (
+    
+    
+    input alufn_boole[4], // ALUFN[3:0]
+    input a[8], 
+    input b[8],
+    
+    output boole[8] 
+  ) {
+
+  always {
+    case(alufn_boole){
+    
+      // ALUFN[3:0] encodings based on lab 3 handout
+      4b0000:
+        boole = 8b0;
+      4b1000:
+        boole = a & b; 
+      4b1110:
+        boole = a | b;
+      4b0110:
+        boole = a ^ b;
+      4b1010:
+        boole = a;
+      default:
+        boole = 8b0; 
+      
+      
+      
+      
+      
+      }
+  }
+}
+
+
